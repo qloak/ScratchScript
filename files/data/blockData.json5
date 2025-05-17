@@ -1,0 +1,833 @@
+{
+    // MOTION
+    moveSteps: {
+        opcode: "motion_movesteps",
+        inputs: ["STEPS"],
+        niceInputNames: ["steps"],
+        type: "stack",
+    },
+    turnRight: {
+        opcode: "motion_turnright",
+        inputs: ["DEGREES"],
+        niceInputNames: ["degrees"],
+        type: "stack",
+    },
+    turnLeft: {
+        opcode: "motion_turnleft",
+        inputs: ["DEGREES"],
+        niceInputNames: ["degrees"],
+        type: "stack",
+    },
+    goTo: {
+        opcode: "motion_goto",
+        dropdown: "block",
+        dropdownOpcode: ["motion_goto_menu"],
+        inputs: ["TO"],
+        niceInputNames: ["target"],
+        type: "stack",
+    },
+    goToXY: {
+        opcode: "motion_gotoxy",
+        inputs: ["X", "Y"],
+        niceInputNames: ["x", "y"],
+        type: "stack",
+    },
+    glideSecsTo: {
+        opcode: "motion_glideto",
+        dropdown: "block",
+        dropdownOpcode: [null, "motion_glideto_menu"],
+        inputs: ["SECS", "TO"],
+        niceInputNames: ["seconds", "to"],
+        type: "stack",
+    },
+    glideSecsToXY: {
+        opcode: "motion_glidesecstoxy",
+        inputs: ["SECS", "X", "Y"],
+        niceInputNames: ["seconds", "x", "y"],
+        type: "stack",
+    },
+    pointInDirection: {
+        opcode: "motion_pointindirection",
+        inputs: ["DIRECTION"],
+        niceInputNames: ["direction"],
+        type: "stack",
+    },
+    pointTowards: {
+        opcode: "motion_pointtowards",
+        inputs: ["TOWARDS"],
+        niceInputNames: ["target"],
+        dropdown: "block",
+        dropdownOpcode: ["motion_pointtowards_menu"],
+        type: "stack",
+    },
+    changeX: {
+        opcode: "motion_changexby",
+        inputs: ["DX"],
+        niceInputNames: ["amount"],
+        type: "stack",
+    },
+    setX: {
+        opcode: "motion_setx",
+        inputs: ["X"],
+        niceInputNames: ["x"],
+        type: "stack",
+    },
+    changeY: {
+        opcode: "motion_changeyby",
+        inputs: ["DY"],
+        niceInputNames: ["amount"],
+        type: "stack",
+    },
+    setY: {
+        opcode: "motion_sety",
+        inputs: ["Y"],
+        niceInputNames: ["y"],
+        type: "stack",
+    },
+    ifOnEdgeBounce: {
+        opcode: "motion_ifonedgebounce",
+        type: "stack",
+    },
+    xPos: {
+        opcode: "motion_xposition",
+        type: "reporter",
+    },
+    yPos: {
+        opcode: "motion_yposition",
+        type: "reporter",
+    },
+    direction: {
+        opcode: "motion_direction",
+        type: "reporter",
+    },
+    setRotationStyle: {
+        opcode: "motion_setrotationstyle",
+        dropdownInputs: ["STYLE"],
+        inputs: ["STYLE"],
+        niceInputNames: ["style"],
+        type: "stack",
+    },
+
+    // LOOKS
+    sayForSecs: {
+        opcode: "looks_sayforsecs",
+        inputs: ["MESSAGE", "SECS"],
+        niceInputNames: ["message", "seconds"],
+        type: "stack",
+    },
+    say: {
+        opcode: "looks_say",
+        inputs: ["MESSAGE"],
+        niceInputNames: ["message"],
+        type: "stack",
+    },
+    thinkForSecs: {
+        opcode: "looks_thinkforsecs",
+        inputs: ["MESSAGE", "SECS"],
+        niceInputNames: ["message", "seconds"],
+        type: "stack",
+    },
+    think: {
+        opcode: "looks_think",
+        inputs: ["MESSAGE"],
+        niceInputNames: ["message"],
+        type: "stack",
+    },
+    switchCostume: {
+        opcode: "looks_switchcostumeto",
+        dropdown: "block",
+        dropdownOpcode: ["looks_costume"],
+        inputs: ["COSTUME"],
+        niceInputNames: ["costume"],
+        type: "stack",
+    },
+    nextCostume: {
+        opcode: "looks_nextcostume",
+        type: "stack",
+    },
+    switchBackdrop: {
+        opcode: "looks_switchbackdropto",
+        dropdown: "block",
+        dropdownOpcode: ["looks_backdrops"],
+        inputs: ["BACKDROP"],
+        niceInputNames: ["backdrop"],
+        type: "stack",
+    },
+    switchBackdropAndWait: {
+        opcode: "looks_switchbackdroptoandwait",
+        dropdown: "block",
+        dropdownOpcode: ["looks_backdrops"],
+        inputs: ["BACKDROP"],
+        niceInputNames: ["backdrop"],
+        type: "stack",
+    },
+    nextBackdrop: {
+        opcode: "looks_nextbackdrop",
+        type: "stack",
+    },
+    changeSize: {
+        opcode: "looks_changesizeby",
+        inputs: ["CHANGE"],
+        niceInputNames: ["size"],
+        type: "stack",
+    },
+    setSize: {
+        opcode: "looks_setsizeto",
+        inputs: ["SIZE"],
+        niceInputNames: ["size"],
+        type: "stack",
+    },
+    changeEffect: {
+        opcode: "looks_changeeffectby",
+        dropdownInputs: ["EFFECT", null],
+        inputs: ["EFFECT", "CHANGE"],
+        niceInputNames: ["effect", "amount"],
+        type: "stack",
+    },
+    setEffect: {
+        opcode: "looks_seteffectto",
+        dropdownInputs: ["EFFECT", null],
+        inputs: ["EFFECT", "VALUE"],
+        niceInputNames: ["effect", "amount"],
+        type: "stack",
+    },
+    clearGraphicEffects: {
+        opcode: "looks_cleargraphiceffects",
+        type: "stack",
+    },
+    show: {
+        opcode: "looks_show",
+        type: "stack",
+    },
+    hide: {
+        opcode: "looks_hide",
+        type: "stack",
+    },
+    goToFrontBack: {
+        opcode: "looks_gotofrontback",
+        dropdownInputs: ["FRONT_BACK"],
+        inputs: ["FRONT_BACK"],
+        niceInputNames: ["front/back"],
+        type: "stack",
+    },
+    goForwardBackwardLayers: {
+        opcode: "looks_goforwardbackwardlayers",
+        dropdownInputs: ["FORWARD_BACKWARD", null],
+        inputs: ["FORWARD_BACKWARD", "NUM"],
+        niceInputNames: ["forward/backward", "layers"],
+        type: "stack",
+    },
+    costumeNumberName: {
+        opcode: "looks_costumenumbername",
+        dropdownInputs: ["NUMBER_NAME"],
+        inputs: ["NUMBER_NAME"],
+        niceInputNames: ["number/name"],
+        type: "stack",
+    },
+    backdropNumberName: {
+        opcode: "looks_backdropnumbername",
+        dropdownInputs: ["NUMBER_NAME"],
+        inputs: ["NUMBER_NAME"],
+        niceInputNames: ["number/name"],
+        type: "stack",
+    },
+    size: {
+        opcode: "looks_size",
+        type: "reporter",
+    },
+
+    // SOUNDS
+    playSoundUntilDone: {
+        opcode: "sound_playuntildone",
+        dropdown: "block",
+        dropdownOpcode: ["sound_sounds_menu"],
+        inputs: ["SOUND_MENU"],
+        niceInputNames: ["sound"],
+        type: "stack",
+    },
+    startSound: {
+        opcode: "sound_play",
+        dropdown: "block",
+        dropdownOpcode: ["sound_sounds_menu"],
+        inputs: ["SOUND_MENU"],
+        niceInputNames: ["sound"],
+        type: "stack",
+    },
+    stopAllSounds: {
+        opcode: "sound_stopallsounds",
+        type: "stack",
+    },
+    changeSoundEffect: {
+        opcode: "sound_changeeffectby",
+        dropdownInputs: ["EFFECT", null],
+        inputs: ["EFFECT", "VALUE"],
+        niceInputNames: ["effect", "amount"],
+        type: "stack",
+    },
+    setSoundEffect: {
+        opcode: "sound_seteffectto",
+        dropdownInputs: ["EFFECT", null],
+        inputs: ["EFFECT", "VALUE"],
+        niceInputNames: ["effect", "amount"],
+        type: "stack",
+    },
+    clearSoundEffects: {
+        opcode: "sound_cleareffects",
+        type: "stack",
+    },
+    changeVolume: {
+        opcode: "sound_changevolumeby",
+        inputs: ["VOLUME"],
+        niceInputNames: ["volume"],
+        type: "stack",
+    },
+    setVolume: {
+        opcode: "sound_setvolumeto",
+        inputs: ["VOLUME"],
+        niceInputNames: ["volume"],
+        type: "stack",
+    },
+    volume: {
+        opcode: "sound_volume",
+        type: "reporter",
+    },
+
+    // CONTROL
+    wait: {
+        opcode: "control_wait",
+        inputs: ["DURATION"],
+        niceInputNames: ["duration"],
+        type: "stack",
+    },
+    repeat: {
+        opcode: "control_repeat",
+        inputs: ["TIMES"],
+        type: "stack",
+        customDocs: 'repeat (times) {\n}'
+    },
+    repeatUntil: {
+        opcode: "control_repeat_until",
+        inputs: ["CONDITION"],
+        type: "stack",
+        customDocs: 'repeatUntil (condition) {\n}'
+    },
+    while: {
+        opcode: "control_while",
+        inputs: ["CONDITION"],
+        type: "stack",
+        customDocs: 'while (condition) {\n}'
+    },
+    if: {
+        opcode: "control_if",
+        inputs: ["CONDITION"],
+        type: "stack",
+        customDocs: 'if (condition) {\n}'
+    },
+    ifElse: {
+        opcode: "control_if_else",
+        inputs: ["CONDITION"],
+        type: "stack",
+        shouldInclude: false,
+        customDocs: 'if (condition) {\n} else {\n}'
+    },
+    waitUntil: {
+        opcode: "control_wait_until",
+        inputs: ["CONDITION"],
+        niceInputNames: ["condition"],
+        type: "stack",
+    },
+    forever: {
+        opcode: "control_forever",
+        type: "stack",
+        customDocs: 'forever() {\n}'
+    },
+    whenStartAsClone: {
+        opcode: "control_start_as_clone",
+        type: "hat"
+    },
+    createClone: {
+        opcode: "control_create_clone_of",
+        dropdown: "block",
+        dropdownOpcode: ["control_create_clone_of_menu"],
+        inputs: ["CLONE_OPTION"],
+        niceInputNames: ["target"],
+        type: "stack",
+    },
+    deleteThisClone: {
+        opcode: "control_delete_this_clone",
+        stack: "stack",
+    },
+    getCounter: {
+        opcode: "control_get_counter",
+        type: "reporter"
+    },
+    incrementCounter: {
+        opcode: "control_incr_counter",
+        type: "stack"
+    },
+    clearCounter: {
+        opcode: "control_clear_counter",
+        type: "stack"
+    },
+
+    // EVENTS
+    whenGreenFlagClicked: {
+        opcode: "event_whenflagclicked",
+        type: "hat",
+    },
+    whenKeyPressed: {
+        opcode: "event_whenkeypressed",
+        dropdownInputs: ["KEY_OPTION"],
+        inputs: ["KEY_OPTION"],
+        type: "hat",
+        niceInputNames: ["key"]
+    },
+    whenThisSpriteClicked: {
+        opcode: "event_whenthisspriteclicked",
+        type: "hat"
+    },
+    whenThisSpriteTouches: {
+        opcode: "event_whentouchingobject",
+        dropdown: "block",
+        dropdownOpcode: ["sensing_touchingobjectmenu"],
+        inputs: ["TOUCHINGOBJECTMENU"],
+        niceInputNames: ["target"],
+        type: "hat"
+    },
+    whenBackdropSwitchesTo: {
+        opcode: "event_whenbackdropswitchesto",
+        dropdownInputs: ["BACKDROP"],
+        inputs: ["BACKDROP"],
+        niceInputNames: ["backdropName"],
+        type: "hat"
+    },
+    whenGreaterThan: {
+        opcode: "event_whengreaterthan",
+        dropdownInputs: ["WHENGREATERTHANMENU", null],
+        inputs: ["WHENGREATERTHANMENU", "VALUE"],
+        niceInputNames: ["loudness/timer", "number"],
+        type: "hat"
+    },
+    whenMessageReceived: {
+        opcode: "event_whenbroadcastreceived",
+        dropdownInputs: ["BROADCAST_OPTION"],
+        inputs: ["BROADCAST_OPTION"],
+        niceInputNames: ["messageName"],
+        type: "hat"
+    },
+    broadcast: {
+        opcode: "event_broadcast",
+        inputs: ["BROADCAST_INPUT"],
+        niceInputNames: ["broadcastName"],
+        type: "stack"
+    },
+    broadcastAndWait: {
+        opcode: "event_broadcastandwait",
+        inputs: ["BROADCAST_INPUT"],
+        niceInputNames: ["broadcastName"],
+        type: "stack"
+    },
+
+    // SENSING
+    isTouching: {
+        opcode: "sensing_touchingobject",
+        dropdown: "block",
+        dropdownOpcode: ["sensing_touchingobjectmenu"],
+        inputs: ["TOUCHINGOBJECTMENU"],
+        niceInputNames: ["sprite"],
+        type: "boolean",
+    },
+    isTouchingColor: {
+        opcode: "sensing_touchingcolor",
+        inputs: ["COLOR"],
+        niceInputNames: ["color"],
+        type: "boolean",
+    },
+    isColorTouchingColor: {
+        opcode: "sensing_coloristouchingcolor",
+        inputs: ["COLOR", "COLOR2"],
+        niceInputNames: ["color1", "color2"],
+        type: "boolean",
+    },
+    distanceTo: {
+        opcode: "sensing_distanceto",
+        dropdown: "block",
+        inputs: ["DISTANCETOMENU"],
+        niceInputNames: ["sprite"],
+        dropdownOpcode: ["sensing_distancetomenu"],
+        type: "reporter",
+    },
+    ask: {
+        opcode: "sensing_askandwait",
+        inputs: ["QUESTION"],
+        niceInputNames: ["question"],
+        type: "stack",
+    },
+    answer: {
+        opcode: "sensing_answer",
+        type: "reporter",
+    },
+    isKeyPressed: {
+        opcode: "sensing_keypressed",
+        dropdown: "block",
+        dropdownOpcode: ["sensing_keyoptions"],
+        inputs: ["KEY_OPTION"],
+        niceInputNames: ["key"],
+        type: "boolean",
+    },
+    isMouseDown: {
+        opcode: "sensing_mousedown",
+        type: "boolean",
+    },
+    mouseX: {
+        opcode: "sensing_mousex",
+        type: "reporter",
+    },
+    mouseY: {
+        opcode: "sensing_mousey",
+        type: "reporter",
+    },
+    setDragMode: {
+        opcode: "sensing_setdragmode",
+        dropdownInputs: ["DRAG_MODE"],
+        inputs: ["DRAG_MODE"],
+        niceInputNames: ["dragMode"],
+        type: "stack",
+    },
+    loudness: {
+        opcode: "sensing_loudness",
+        type: "reporter",
+    },
+    timer: {
+        opcode: "sensing_timer",
+        type: "reporter",
+    },
+    resetTimer: {
+        opcode: "sensing_resettimer",
+        type: "stack",
+    },
+    propertyOf: {
+        opcode: "sensing_of",
+        inputs: ["PROPERTY", "OBJECT"],
+        dropdown: "block",
+        dropdownOpcode: [null, "sensing_of_object_menu"],
+        dropdownInputs: ["PROPERTY", null],
+        niceInputNames: ["property", "object"],
+        type: "reporter"
+    },
+    currentDate: {
+        opcocde: "sensing_current",
+        dropdownInputs: ["CURRENTMENU"],
+        inputs: ["CURRENTMENU"],
+        niceInputNames: ["format"],
+        type: "reporter",
+    },
+    daysSince2000: {
+        opcode: "sensing_dayssince2000",
+        type: "reporter",
+    },
+    username: {
+        opcode: "sensing_username",
+        type: "reporter",
+    },
+    isLoud: {
+        opcode: "sensing_loud",
+        type: "boolean"
+    },
+
+    // OPERATORS
+    "+": {
+        opcode: "operator_add",
+        inputs: ["NUM1", "NUM2"],
+        niceInputNames: ["num1", "num2"],
+        type: "reporter",
+    },
+    "-": {
+        opcode: "operator_subtract",
+        inputs: ["NUM1", "NUM2"],
+        niceInputNames: ["num1", "num2"],
+        type: "reporter",
+    },
+    "*": {
+        opcode: "operator_multiply",
+        inputs: ["NUM1", "NUM2"],
+        niceInputNames: ["num1", "num2"],
+        type: "reporter",
+    },
+    "/": {
+        opcode: "operator_divide",
+        inputs: ["NUM1", "NUM2"],
+        niceInputNames: ["num1", "num2"],
+        type: "reporter",
+    },
+    pickRandom: {
+        opcode: "operator_random",
+        inputs: ["FROM", "TO"],
+        niceInputNames: ["from", "to"],
+        type: "reporter",
+    },
+    ">": {
+        opcode: "operator_gt",
+        inputs: ["OPERAND1", "OPERAND2"],
+        niceInputNames: ["operand1", "operand2"],
+        type: "boolean",
+    },
+    "<": {
+        opcode: "operator_lt",
+        inputs: ["OPERAND1", "OPERAND2"],
+        niceInputNames: ["operand1", "operand2"],
+        type: "boolean",
+    },
+    "=": {
+        opcode: "operator_equals",
+        inputs: ["OPERAND1", "OPERAND2"],
+        niceInputNames: ["operand1", "operand2"],
+        type: "boolean",
+    },
+    and: {
+        opcode: "operator_and",
+        inputs: ["OPERAND1", "OPERAND2"],
+        niceInputNames: ["operand1", "operand2"],
+        type: "boolean",
+    },
+    or: {
+        opcode: "operator_or",
+        inputs: ["OPERAND1", "OPERAND2"],
+        niceInputNames: ["operand1", "operand2"],
+        type: "boolean",
+    },
+    not: {
+        opcode: "operator_not",
+        inputs: ["OPERAND"],
+        niceInputNames: ["operand"],
+        type: "boolean",
+    },
+    join: {
+        opcode: "operator_join",
+        inputs: ["STRING1", "STRING2"],
+        niceInputNames: ["string1", "string2"],
+        type: "reporter",
+    },
+    letterOf: {
+        opcode: "operator_letter_of",
+        inputs: ["LETTER", "STRING"],
+        niceInputNames: ["letter", "string"],
+        type: "reporter",
+    },
+    length: {
+        opcode: "operator_length",
+        inputs: ["STRING"],
+        niceInputNames: ["string"],
+        type: "reporter",
+    },
+    contains: {
+        opcode: "operator_contains",
+        inputs: ["STRING1", "STRING2"],
+        niceInputNames: ["string1", "string2"],
+        type: "boolean",
+    },
+    mod: {
+        opcode: "operator_mod",
+        inputs: ["NUM1", "NUM2"],
+        niceInputNames: ["num1", "num2"],
+        type: "reporter",
+    },
+    round: {
+        opcode: "operator_round",
+        inputs: ["NUM"],
+        niceInputNames: ["number"],
+        type: "reporter",
+    },
+    math: {
+        opcode: "operator_mathop",
+        dropdownInputs: ["OPERATOR", null],
+        inputs: ["OPERATOR", "NUM"],
+        niceInputNames: ["operation", "number"],
+        type: "reporter",
+    },
+
+    // DATA
+    setVar: {
+        opcode: "data_setvariableto",
+        dropdownInputs: ["VARIABLE", null],
+        inputs: ["VARIABLE", "VALUE"],
+        niceInputNames: ["variableName", "value"],
+        type: "stack",
+        category: "variable",
+    },
+    // getVar: {
+    //     type: "stack",
+    // },
+    changeVar: {
+        opcode: "data_changevariableby",
+        dropdownInputs: ["VARIABLE", null],
+        inputs: ["VARIABLE", "VALUE"],
+        niceInputNames: ["variable", "value"],
+        type: "stack",
+        category: "variable",
+    },
+    showVar: {
+        opcode: "data_showvariable",
+        dropdownInputs: ["VARIABLE"],
+        inputs: ["VARIABLE"],
+        niceInputNames: ["variable"],
+        type: "stack",
+        category: "variable",
+    },
+    hideVar: {
+        opcode: "data_hidevariable",
+        dropdownInputs: ["VARIABLE"],
+        inputs: ["VARIABLE"],
+        niceInputNames: ["variable"],
+        type: "stack",
+        category: "variable",
+    },
+
+    //DATA — LISTS
+    addToList: {
+        opcode: "data_addtolist",
+        dropdownInputs: [null, "LIST"],
+        inputs: ["ITEM", "LIST"],
+        niceInputNames: ["item", "list"],
+        type: "stack",
+        category: "list"
+    },
+    deleteFromList: {
+        opcode: "data_deleteoflist",
+        dropdownInputs: [null, "LIST"],
+        inputs: ["INDEX", "LIST"],
+        niceInputNames: ["index", "list"],
+        type: "stack",
+        category: "list"
+    },
+    deleteAllOfList: {
+        opcode: "data_deletealloflist",
+        dropdownInputs: ["LIST"],
+        inputs: ["LIST"],
+        niceInputNames: ["list"],
+        type: "stack",
+        category: "list"
+    },
+    insertInList: {
+        opcode: "data_insertatlist",
+        dropdownInputs: [null, null, "LIST"],
+        inputs: ["ITEM", "INDEX", "LIST"],
+        niceInputNames: ["item", "index", "list"],
+        type: "stack",
+        category: "list"
+    },
+    replaceInList: {
+        opcode: "data_replaceitemoflist",
+        dropdownInputs: [null, "LIST", null],
+        inputs: ["INDEX", "LIST", "ITEM"],
+        niceInputNames: ["index", "list", "item"],
+        type: "stack",
+        category: "list"
+    },
+    itemOfList: {
+        opcode: "data_itemoflist",
+        dropdownInputs: [null, "LIST"],
+        inputs: ["INDEX", "LIST"],
+        niceInputNames: ["index", "list"],
+        type: "reporter",
+        category: "list"
+    },
+    itemNumOfList: {
+        opcode: "data_itemnumoflist",
+        dropdownInputs: [null, "LIST"],
+        inputs: ["ITEM", "LIST"],
+        niceInputNames: ["item", "list"],
+        type: "reporter",
+        category: "list"
+    },
+    lengthOfList: {
+        opcode: "data_lengthoflist",
+        dropdownInputs: ["LIST"],
+        inputs: ["LIST"],
+        niceInputNames: ["list"],
+        type: "reporter",
+        category: "list"
+    },
+    listContains: {
+        opcode: "data_listcontainsitem",
+        dropdownInputs: ["LIST", null],
+        inputs: ["LIST", "ITEM"],
+        niceInputNames: ["list", "item"],
+        type: "boolean",
+        category: "list"
+    },
+
+    // PEN
+    eraseAll: {
+        opcode: "pen_clear",
+        type: "stack"
+    },
+    stamp: {
+        opcode: "pen_stamp",
+        type: "stack"
+    },
+    penDown: {
+        opcode: "pen_penDown",
+        type: "stack"
+    },
+    penUp: {
+        opcode: "pen_penUp",
+        type: "stack"
+    },
+    setPenColor: {
+        opcode: "pen_setPenColorToColor",
+        inputs: ["COLOR"],
+        niceInputNames: ["color"],
+        type: "stack"
+    },
+    changePenColorProperty: {
+        opcode: "pen_changePenColorParamBy",
+        inputs: ["COLOR_PARAM", "VALUE"],
+        niceInputNames: ["colorProperty", "value"],
+        type: "stack"
+    },
+    setPenColorProperty: {
+        opcode: "pen_setPenColorParamTo",
+        inputs: ["COLOR_PARAM", "VALUE"],
+        niceInputNames: ["colorProperty", "value"],
+        type: "stack"
+    },
+    changePenSize: {
+        opcode: "pen_changePenSizeBy",
+        inputs: ["SIZE"],
+        niceInputNames: ["size"],
+        type: "stack"
+    },
+    setPenSize: {
+        opcode: "pen_setPenSizeTo",
+        inputs: ["SIZE"],
+        niceInputNames: ["size"],
+        type: "stack"
+    },
+    setPenShade: {
+        opcode: "pen_setPenShadeToNumber",
+        inputs: ["SHADE"],
+        niceInputNames: ["shade"],
+        type: "stack"
+    },
+    changePenShade: {
+        opcode: "pen_changePenShadeBy",
+        inputs: ["SHADE"],
+        niceInputNames: ["shade"],
+        type: "stack"
+    },
+    // playDrumForBeats: {
+    //     opcode: "music_playDrumForBeats",
+    //     inputs: ["DRUM", "BEATS"],
+    //     dropdown: "block",
+    //     dropdownOpcode: ["music_menu_DRUM", null],
+    //     niceInputNames: ["drum", "beats"],
+    //     type: "stack"
+    // },
+    // restForBeats: {
+    //     opcode: "music_restForBeats",
+    //     inputs: ["BEATS"],
+    //     niceInputNames: ["beats"],
+    //     type: "stack"
+    // }
+}

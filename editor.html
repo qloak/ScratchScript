@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ScratchScript — Text Based Scratch</title>
+    <link rel="stylesheet" href="files/css/editor.css">
+    <link rel="stylesheet" href="files/css/scaffolding.css">
+    <script src="https://cdn.jsdelivr.net/npm/@turbowarp/scaffolding@0.1.0/dist/scaffolding-min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/json5@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/1.3.8/FileSaver.js"></script>
+    <script src="files/js/ScratchBlocks/scratchblocks-v3.6.4-min.js"></script>
+    <script src="files/js/editor.js"></script>
+    <script src="files/js/utils.js"></script>
+</head>
+<body>
+    <div id="title">
+        <img src="files/images/logo.png">
+        <div id="buttons">
+            <img src="files/images/run.svg" class="btn" onclick="run()" title="Compile and run">
+            <img src="files/images/download.svg" class="btn" onclick="download()" title="Compile and download project as .sb3">
+            <img src="files/images/save script.png" height="40px" class="btn" onclick="saveCode()" title="Save code in editor as .ScratchScript file">
+            <img src="files/images/load icon.png" height="40px" class="btn" onclick="document.querySelector('#loadcodeinput').click()" title="Load a .ScratchScript file into editor">
+            <input id="loadcodeinput" type="file" accept=".ScratchScript" hidden onchange="loadCode()"/>
+            <!-- <button onclick="run()" class="btn" disabled>Compile and Run</button><br> -->
+            <!-- <button onclick="download()" class="btn" disabled style="margin-top: 5px;">Compile and Download</button> -->
+        </div>
+        <a href="/" target="_blank"><button class="header-btn left btn">Home</button></a>
+        <a href="https://scratch.mit.edu/discuss/topic/123456" target="_blank"><button class="header-btn btn">Forum Topic</button></a>
+        <a href="docs" target="_blank"><button class="header-btn btn">Documention</button></a>
+    </div>
+    <div id="container">
+        <div class="loading-spinner" id="editor-loading-spinner" style="display: none;"></div>
+        <div id="editor-container">
+            <div id="editor-tabs">
+                <button id="editor-code-button" onclick="switchToCode()">Code</button>
+                <button id="editor-costumes-button" onclick="switchToCostumes()">Costumes</button>
+                <button id="editor-sounds-button" onclick="switchToSounds()">Sounds</button>
+                <span style="margin-left: 5px;" id="selected-sprite" hidden>Sprite: </span>
+            </div>
+            <hr>
+            <div id="costume-editor" hidden>
+                <table id="costume-list"></table>
+                <button onclick="this.nextSibling.nextSibling.click()" class="b add">Add Costume</button>
+                <input type="file" multiple id="costume-file-input" accept=".svg,.png,.bmp,.jpg,.jpeg,.gif" onchange="costumeChanged()" hidden>
+            </div>
+            <div id="sound-editor" hidden>
+                <table id="sound-list"></table>
+                <button onclick="this.nextSibling.nextSibling.click()" class="b add">Add Sound</button>
+                <input type="file" multiple id="sound-file-input" onchange="soundChanged()" hidden>
+            </div>
+            <div id="editor" hidden></div>
+        </div>
+        <!-- <iframe style="height: calc(100vh - 60px);width: calc(60vw - 5px);" id="preview"></iframe> -->
+        <div style="width: 50%;">
+            <div id="preview" hidden>
+                <div id="project-control-bar" hidden>
+                    <table class="project-control-table">
+                        <tr>
+                            <td class="control-button" title="Start Compiled Project" onclick="handleGreenFlag()"><img src="data:image/svg+xml;base64,PHN2ZyBpZD0iTGF5ZXJfMSIgZGF0YS1uYW1lPSJMYXllciAxIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxNi42MyAxNy41Ij48ZGVmcz48c3R5bGU+LmNscy0xLC5jbHMtMntmaWxsOiM0Y2JmNTY7c3Ryb2tlOiM0NTk5M2Q7c3Ryb2tlLWxpbmVjYXA6cm91bmQ7c3Ryb2tlLWxpbmVqb2luOnJvdW5kO30uY2xzLTJ7c3Ryb2tlLXdpZHRoOjEuNXB4O308L3N0eWxlPjwvZGVmcz48dGl0bGU+aWNvbi0tZ3JlZW4tZmxhZzwvdGl0bGU+PHBhdGggY2xhc3M9ImNscy0xIiBkPSJNLjc1LDJBNi40NCw2LjQ0LDAsMCwxLDguNDQsMmgwYTYuNDQsNi40NCwwLDAsMCw3LjY5LDBWMTIuNGE2LjQ0LDYuNDQsMCwwLDEtNy42OSwwaDBhNi40NCw2LjQ0LDAsMCwwLTcuNjksMCIvPjxsaW5lIGNsYXNzPSJjbHMtMiIgeDE9IjAuNzUiIHkxPSIxNi43NSIgeDI9IjAuNzUiIHkyPSIwLjc1Ii8+PC9zdmc+"></td>
+                            <td class="control-button" title="Stop Project" onclick="scaffolding.stopAll()"><img src="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0idXRmLTgiPz4KPCEtLSBHZW5lcmF0b3I6IEFkb2JlIElsbHVzdHJhdG9yIDE5LjEuMCwgU1ZHIEV4cG9ydCBQbHVnLUluIC4gU1ZHIFZlcnNpb246IDYuMDAgQnVpbGQgMCkgIC0tPgo8c3ZnIHZlcnNpb249IjEuMSIgaWQ9IkxheWVyXzEiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgeG1sbnM6eGxpbms9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkveGxpbmsiIHg9IjBweCIgeT0iMHB4IgoJIHZpZXdCb3g9IjAgMCAxNCAxNCIgc3R5bGU9ImVuYWJsZS1iYWNrZ3JvdW5kOm5ldyAwIDAgMTQgMTQ7IiB4bWw6c3BhY2U9InByZXNlcnZlIj4KPHN0eWxlIHR5cGU9InRleHQvY3NzIj4KCS5zdDB7ZmlsbDojRUM1OTU5O3N0cm9rZTojQjg0ODQ4O3N0cm9rZS1saW5lY2FwOnJvdW5kO3N0cm9rZS1saW5lam9pbjpyb3VuZDtzdHJva2UtbWl0ZXJsaW1pdDoxMDt9Cjwvc3R5bGU+Cjxwb2x5Z29uIGNsYXNzPSJzdDAiIHBvaW50cz0iNC4zLDAuNSA5LjcsMC41IDEzLjUsNC4zIDEzLjUsOS43IDkuNywxMy41IDQuMywxMy41IDAuNSw5LjcgMC41LDQuMyAiLz4KPC9zdmc+Cg=="></td>
+                            <td id="clone-counter" hidden><small>&ThickSpace;Clones: </small></td>
+                            <td id="turbo-mode" hidden>
+                                <div style="height: 75%;">
+                                    <img id="turbo-mode-img" src="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiIHN0YW5kYWxvbmU9Im5vIj8+Cjxzdmcgd2lkdGg9IjE2cHgiIGhlaWdodD0iMTZweCIgdmlld0JveD0iMCAwIDE2IDE2IiB2ZXJzaW9uPSIxLjEiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgeG1sbnM6eGxpbms9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkveGxpbmsiPgogICAgPCEtLSBHZW5lcmF0b3I6IFNrZXRjaCA0My4yICgzOTA2OSkgLSBodHRwOi8vd3d3LmJvaGVtaWFuY29kaW5nLmNvbS9za2V0Y2ggLS0+CiAgICA8dGl0bGU+dHVyYm8tYm9sdC1pY29uPC90aXRsZT4KICAgIDxkZXNjPkNyZWF0ZWQgd2l0aCBTa2V0Y2guPC9kZXNjPgogICAgPGRlZnM+PC9kZWZzPgogICAgPGcgaWQ9IlBhZ2UtMSIgc3Ryb2tlPSJub25lIiBzdHJva2Utd2lkdGg9IjEiIGZpbGw9Im5vbmUiIGZpbGwtcnVsZT0iZXZlbm9kZCI+CiAgICAgICAgPGcgaWQ9InR1cmJvLWJvbHQtaWNvbiIgc3Ryb2tlPSIjRkY4QzFBIiBmaWxsPSIjRkY4QzFBIj4KICAgICAgICAgICAgPHBhdGggZD0iTTYuMTkxOTI2NSw5Ljk3MDQxMjY3IEM2LjM5ODE3NTc4LDEwLjQ4Mjc5OTMgNi44NDUxMjk2LDEwLjU1MTU0MTggNy4xOTQ1NjA0NCwxMC4xMTg1ODI1IEw3LjQ2MTQ0NDgsOS43ODc5MDE2NyBDNy44MDg5MzQ5Niw5LjM1NzM0Njk0IDguNDM0MjI1NjQsOS4yODU0NTUxNiA4Ljg3MzQ2NjYxLDkuNjM5NzQ1MjEgTDExLjY4NjU2LDExLjkwODc3NTQgQzEyLjExODkwOCwxMi4yNTc1MDU1IDEyLjMwMzA4NTgsMTIuMTI2NTkwMyAxMi4wOTYyNzA1LDExLjYxMjIzNDEgTDkuNzQ5MjE1NzUsNS43NzUwMzQ1MyBDOS41NDMxNDQ2Miw1LjI2MjUyOTEyIDkuMDk1ODQ0NzIsNS4xOTQwMTczOCA4Ljc0NTgwMTIsNS42MjczODUxNSBMOC40Nzg0NDg5LDUuOTU4Mzc3OSBDOC4xMzAzNDk0Nyw2LjM4OTMzODgxIDcuNTA0NTY0ODYsNi40NjE1NTk4NyA3LjA2NTMyMzg5LDYuMTA3MjY5ODIgTDQuMjUyMjMwNDgsMy44MzgyMzk2NyBDMy44MTk4ODI1MiwzLjQ4OTUwOTQ5IDMuNjM1ODQ4NTEsMy42MjAzMjg5MSAzLjg0Mjg0MjYxLDQuMTM0NTY1OTEgTDYuMTkxOTI2NSw5Ljk3MDQxMjY3IFoiIGlkPSJ0dXJiby1ib2x0IiB0cmFuc2Zvcm09InRyYW5zbGF0ZSg3Ljk2OTM5NSwgNy44NzM1MDgpIHJvdGF0ZSg2OS4wMDAwMDApIHRyYW5zbGF0ZSgtNy45NjkzOTUsIC03Ljg3MzUwOCkgIj48L3BhdGg+CiAgICAgICAgPC9nPgogICAgPC9nPgo8L3N2Zz4=">
+                                    <span id="turbo-mode-text">Turbo Mode</span>
+                                </div>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+                <div id="project" hidden>
+                </div>
+                <div id="loading">
+                    <div class="loading-spinner"></div>
+                    <div id="loading-text">Loading assets...</div>
+                    <div id="loading-progress"></div>
+                </div>
+            </div>
+            <div id="sprite-container">
+                <button id="new-sprite-button" onclick="newSprite()" class="b">New Sprite</button>
+                <table id="sprite-table"></table>
+            </div>
+        </div>
+    </div>
+
+    <script src="files/js/scaffolding.js"></script>
+    <script src="files/js/app.js"></script>
+    <script type="module" src="files/js/codemirror.js"></script>
+</body>
+</html>
