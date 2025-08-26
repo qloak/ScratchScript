@@ -1,4 +1,5 @@
 function handleSpecial(lines) {
+    // Replaces forever loops with repeat infinity for now
     let code = [];
     for (let line of lines) {
         if (line.trim().startsWith("forever()") && line.trim().endsWith("{")) {
@@ -11,6 +12,7 @@ function handleSpecial(lines) {
 }
 
 function getParamsArray(params) {
+    // Parses a function string and results the params
     let str = params.slice(1, params.length - 1);
     if (str == "") {
         return [];
@@ -22,6 +24,7 @@ function getParamsArray(params) {
     let output = [];
     let start = 0;
     let inString = false;
+    // console.log(str);
     let i = 0;
     for (char of str) {
         if (!inString) {
@@ -42,18 +45,26 @@ function getParamsArray(params) {
         i += 1;
     }
     output.push(str.slice(start, i).trim());
-    return output;
+
+    // console.log(output);
+    return output; // Returns a list
 }
 
 function parseBlock(str) {
+    // Parse block recursively making a nested list of lists
+    // Returns a list of terms
+    // A term is either a literal value or a function name
+    // A term is an Object
     str = str.trim();
     if (str.startsWith('"')) {
+        // String
         return str.slice(1, str.length - 1);
     }
     if (!isNaN(parseFloat(str))) {
         return parseFloat(str);
     }
     if (isNaN(parseFloat(str)) && !str.startsWith('"')) {
+        // if (!str.startsWith("$") /* || !str.startsWith("#") */) {
         if (!(str.startsWith("$") || str.startsWith("#") || str == "true" || str == "false")) {
             if (!str.includes("(")) {
                 compileError("Missing '('");
@@ -79,6 +90,9 @@ function parseBlock(str) {
                 }
             }
         }
+        // for (let paramsStr of paramsStringsArray) {
+
+        // }
     }
 }
 
@@ -119,6 +133,15 @@ function getBroadcasts() {
 }
 
 function getCostumes(sprite) {
+    let example = {
+        name: "costume1",
+        bitmapResolution: 1,
+        dataFormat: "svg",
+        assetId: "bcf454acf82e4504149f7ffe07081dbc",
+        md5ext: "bcf454acf82e4504149f7ffe07081dbc.svg",
+        rotationCenterX: 48,
+        rotationCenterY: 50,
+    };
     let createdCostumeList = [];
     for (let costume of assets.sprites[sprite].costumeList) {
         let newCostume = {
@@ -136,6 +159,15 @@ function getCostumes(sprite) {
 }
 
 function getSounds(sprite) {
+    let example = {
+        name: "Meow",
+        assetId: "83c36d806dc92327b9e7049a565c6bff",
+        dataFormat: "wav",
+        format: "",
+        rate: 48000,
+        sampleCount: 40682,
+        md5ext: "83c36d806dc92327b9e7049a565c6bff.wav",
+    };
     let createdSoundList = [];
     for (let sound of assets.sprites[sprite].soundList) {
         let newSound = {
@@ -153,10 +185,19 @@ function compileError(err) {
     throw { name: "CompileError", message: `CompileError on line ${lineNum} in sprite ${getSpriteName(spriteBeingCompiled, true)} — ${err}` };
 }
 
+const input1 = '"3"';
+const output1 = "3";
+const input2 = "3.14159";
+const output2 = 3.14159;
+const input3 = "pickRandom(1, 10)";
+const output3 = ["pickRandom", 1, 10];
+const input4 = 'sayForSecs(pickRandom(1, pickRandom(5, "10")), 2.5)';
+
 const variableStartThing = "$`!jsf☠d_Why are you looking here_89ISf[$!☠$~$";
 const listStartThing = "#`!j☠sf_Why are you looking here?_d7S&pSf]]@$!☠#~#";
 
 let blockID;
+// let scriptBlockCount;
 let blockY;
 let firstBlockInScript;
 let blockList;
@@ -164,17 +205,33 @@ let variables;
 let lists;
 let broadcasts;
 let lineNum;
-let spriteBeingCompiled;
 
 function compileBlock(code, parent, nestingLevel) {
+    // console.log("linestr", lineString)
+    // if (lineString.startsWith("//") || lineString == "") {
+    //     return;
+    // }
     blockID += 1;
     let myID = blockID;
+    // let parsedCode = parse(lineString);
     let parsedCode = code;
 
     let block = {};
 
+    // if (parsedCode[0].startsWith("$")) {
+    //     console.log("variable get")
+    //     let varName = parsedCode[0].slice(1)
+    //     if (varName == "") {
+    //         compileError("Variable name is blank")
+    //     }
+    //     block = [12, varName, variables[varName].id]
+    // } else {
+
     let funcName = parsedCode.shift();
+    console.log("funcname", funcName);
     let params = parsedCode;
+    console.log("inputs", params);
+    console.log("id", myID);
 
     if (!funcName) {
         compileError("Function name is undefined");
@@ -204,12 +261,53 @@ function compileBlock(code, parent, nestingLevel) {
         blockY += 70;
     }
 
+    // let doNormal = false;
+    // dropdownBlock: if (blockData[funcName].dropdown == "block") {
+    //     let dropBlockID = (blockID + 1).toString();
+    //     let dropBlock = {
+    //         parent: myID.toString(),
+    //         next: null,
+    //         inputs: {},
+    //         fields: {},
+    //         shadow: true,
+    //     };
+
+    //     for (let [i, param] of params.entries()) {
+    //         let item = blockData[funcName].dropdownOpcode[i];
+    //         if (item != null) {
+    //             console.log("dropblock", item, param);
+    //             if (typeof param == "object") {
+    //                 console.log("canceling...", param);
+    //                 block.inputs = {};
+    //                 doNormal = true;
+    //                 break dropdownBlock;
+    //             }
+    //             dropBlock.opcode = item;
+    //             dropBlock.fields[blockData[funcName].inputs[i]] = [param, null];
+    //             block.inputs[blockData[funcName].inputs[i]] = [1, dropBlockID];
+    //         } else {
+    //             block.inputs[blockData[funcName].inputs[i]] = [1, [10, param]];
+    //         }
+    //     }
+
+    //     console.log(dropBlock);
+    //     blockList[dropBlockID] = dropBlock;
+    //     blockID += 1;
+    // } else {
+    //     doNormal = true;
+    // }
     let doNormal = true;
 
     if (doNormal) {
         for (let [i, param] of params.entries()) {
+            // Hamdle putting in parameters
+            console.log("param", i, param);
             if (typeof param == "object") {
-                block.inputs[blockData[funcName].inputs[i]] = [3, (blockID + 1).toString()];
+                // Another block
+                block.inputs[blockData[funcName].inputs[i]] = [3, (blockID + 1).toString()]; // If the input is a block
+                // if (block.type != "boolean" && !funcName.startsWith("if")) {
+                //     block.inputs[blockData[funcName].inputs[i]][2] = [10, ""];
+                // }
                 compileBlock(param, myID);
             } else {
                 dropBlockIf: if (blockData[funcName].dropdown == "block") {
@@ -223,7 +321,9 @@ function compileBlock(code, parent, nestingLevel) {
                     };
                     let item = blockData[funcName].dropdownOpcode[i];
                     if (item != null) {
+                        console.log("dropblock", item, param);
                         if (typeof param == "object") {
+                            console.log("canceling...", param);
                             block.inputs[i] = {};
                             doNormal = true;
                             break dropBlockIf;
@@ -238,9 +338,13 @@ function compileBlock(code, parent, nestingLevel) {
                 }
 
                 if (blockData[funcName].dropdownInputs) {
+                    // block contains a square dropdown
                     if (blockData[funcName].dropdownInputs[i] != null) {
-                        block.fields[blockData[funcName].inputs[i]] = [param, null];
+                        // only replace input if it is a dropdown
+                        block.fields[blockData[funcName].inputs[i]] = [param, null]; // second param has to be null for some reason
 
+                        // variables
+                        // if (funcName == "setVar" || funcName == "changeVar") {
                         if (blockData[funcName].category) {
                             if (blockData[funcName].category == "variable") {
                                 let varID;
@@ -257,8 +361,12 @@ function compileBlock(code, parent, nestingLevel) {
                                 }
                                 block.fields[blockData[funcName].inputs[i]][1] = varID;
                             }
+                            // }
 
+                            // lists
+                            // if (blockData[funcName].category) {
                             if (blockData[funcName].category == "list") {
+                                console.log("found list", param);
                                 let listID;
                                 if (lists[param]) {
                                     listID = lists[param].id;
@@ -275,7 +383,9 @@ function compileBlock(code, parent, nestingLevel) {
                             }
                         }
 
+                        // broadcast received block - only one with a dropdown
                         if (blockData[funcName].opcode == "event_whenbroadcastreceived") {
+                            console.log("found broadcast", param);
                             let brID;
                             if (broadcasts[param]) {
                                 brID = broadcasts[param].id;
@@ -291,7 +401,9 @@ function compileBlock(code, parent, nestingLevel) {
                     }
                 }
                 if (param.toString().startsWith(variableStartThing)) {
+                    // variable
                     let varName = param.toString().slice(variableStartThing.length + 1);
+                    console.log("varname", varName);
                     if (varName == "") {
                         compileError("Variable name is blank");
                     }
@@ -302,6 +414,7 @@ function compileBlock(code, parent, nestingLevel) {
                 } else {
                     if (param.toString().startsWith(listStartThing)) {
                         let listName = param.toString().slice(listStartThing.length + 1);
+                        console.log("listname", listName);
                         if (listName == "") {
                             compileError("List name is blank");
                         }
@@ -311,6 +424,7 @@ function compileBlock(code, parent, nestingLevel) {
                         block.inputs[blockData[funcName].inputs[i]] = [3, [13, listName, lists[listName].id]];
                     } else {
                         if (funcName.startsWith("broadcast")) {
+                            console.log("found broadcast block");
                             let brID;
                             if (broadcasts[param]) {
                                 brID = broadcasts[param].id;
@@ -321,17 +435,20 @@ function compileBlock(code, parent, nestingLevel) {
                             }
                             block.inputs[blockData[funcName].inputs[i]] = [1, [11, param.toString(), brID]];
                         } else {
-                            block.inputs[blockData[funcName].inputs[i]] = [1, [10, param]];
+                            block.inputs[blockData[funcName].inputs[i]] = [1, [10, param]]; // regular string or number
                         }
                     }
                 }
 
                 if (funcName.toLowerCase().includes("color")) {
+                    // special case color inputs
                     if (param.toString().startsWith("#")) {
-                        block.inputs[blockData[funcName].inputs[i]][1][0] = 9;
+                        console.log("making color input");
+                        block.inputs[blockData[funcName].inputs[i]][1][0] = 9; // type 9 is color
                     }
                 }
             }
+            console.log("current inputs", block.inputs);
         }
         if (params && blockData[funcName].inputs) {
             let got = params.length;
@@ -341,188 +458,124 @@ function compileBlock(code, parent, nestingLevel) {
             }
         }
     }
+    // }
 
+    // block.next = blockID + 1
     blockList[myID.toString()] = block;
 }
 
-function endCurrentScript(nestingLevel = 0) {
-    let keys = Object.keys(blockList);
-    for (let i = keys.length - 1; i >= 0; i--) {
-        let key = keys[i];
-        if (blockList[key].next && blockList[key].nestingLevel == nestingLevel) {
-            blockList[key].next = null;
-            break;
-        }
+const nestingType = {
+    REPEAT: "repeat",
+    IFTHEN: "ifthen",
+    IFTHENELSE: "ifthenelse",
+};
+
+// Check if a line is a script header (hat block or script block)
+function isScriptHeader(line) {
+    line = line.trim();
+    // Check for hat blocks - functions ending with () {
+    if (line.endsWith("() {")) {
+        return true;
     }
+    // Check for script blocks
+    if (line.startsWith("script") && line.endsWith("{")) {
+        return true;
+    }
+    return false;
 }
 
-function isLineHatBlock(line) {
-    const hatBlocks = [
-        'whenGreenFlag()',
-        'whenKeyPressed(',
-        'whenClicked()',
-        'whenBroadcastReceived(',
-        'whenBackdropSwitches(',
-        'whenGreaterThan(',
-        'whenIReceive('
-    ];
-    return hatBlocks.some(hat => line.startsWith(hat));
-}
-
-function parseScriptBlock(initialLine, state, codeLines) {
-    // More robust parsing that handles different script formats
-    const scriptMatch = initialLine.match(/^script\s+([a-zA-Z0-9_]+)\s*(?:\(([^)]*)\))?\s*\{?$/);
-    if (!scriptMatch) {
-        compileError("Invalid script declaration. Use: script name { or script name (x,y) {");
-    }
+// Extract script blocks from the code
+function extractScriptBlocks(codeLines) {
+    let scripts = [];
+    let i = 0;
     
-    const scriptName = scriptMatch[1];
-    const positionArgs = scriptMatch[2] ? scriptMatch[2].split(',').map(arg => arg.trim()) : [];
-    
-    // Check if we already have the opening brace or need to get it from next line
-    let hasOpeningBrace = initialLine.includes('{');
-    let braceDepth = hasOpeningBrace ? 1 : 0;
-    
-    // Save current state
-    const savedState = {
-        blockList: {...blockList},
-        blockID: blockID,
-        blockY: blockY,
-        firstBlockInScript: firstBlockInScript
-    };
-    
-    try {
-        // Initialize new script environment
-        blockList = {};
-        firstBlockInScript = true;
+    while (i < codeLines.length) {
+        let line = codeLines[i].trim();
         
-        // Set position if specified
-        if (positionArgs.length === 2) {
-            const x = parseInt(positionArgs[0]);
-            const y = parseInt(positionArgs[1]);
-            if (!isNaN(x) && !isNaN(y)) {
-                blockY = y;
-            } else {
-                blockY += 90;
-            }
-        } else {
-            blockY += 90;
+        // Skip empty lines and comments
+        if (line === "" || line.startsWith("//")) {
+            i++;
+            continue;
         }
         
-        // Parse script body
-        const scriptLines = [];
-        let lineNumberOffset = state.currentLine;
-        
-        if (!hasOpeningBrace) {
-            // Get opening brace from next line
-            let nextLine = codeLines[state.currentLine++];
-            lineNum = state.currentLine;
-            if (nextLine.trim() !== '{') {
-                compileError("Expected '{' after script declaration");
-            }
-            braceDepth = 1;
-        }
-        
-        while (state.currentLine < codeLines.length && braceDepth > 0) {
-            let line = codeLines[state.currentLine];
-            const trimmedLine = line.trim();
+        // Check if this is a script header
+        if (isScriptHeader(line)) {
+            let script = {
+                header: line,
+                body: [],
+                startLine: i + 1
+            };
             
-            if (trimmedLine === "{") {
-                braceDepth++;
-            } else if (trimmedLine === "}") {
-                braceDepth--;
-                if (braceDepth === 0) {
-                    state.currentLine++;
-                    break;
+            i++; // Move past the header
+            let braceCount = 1; // We've seen the opening brace
+            
+            // Collect the script body
+            while (i < codeLines.length && braceCount > 0) {
+                let bodyLine = codeLines[i];
+                let trimmed = bodyLine.trim();
+                
+                // Count braces to handle nested structures
+                for (let char of trimmed) {
+                    if (char === '{') braceCount++;
+                    if (char === '}') braceCount--;
                 }
+                
+                // Don't include the final closing brace
+                if (braceCount > 0) {
+                    script.body.push(bodyLine);
+                }
+                
+                i++;
             }
             
-            if (braceDepth > 0) {
-                scriptLines.push(line);
-            }
-            state.currentLine++;
+            scripts.push(script);
+        } else {
+            // This shouldn't happen with proper script block syntax
+            compileError(`Unexpected line outside of script block: ${line}`);
         }
-        
-        if (braceDepth > 0) {
-            compileError("Unclosed script block");
-        }
-        
-        // Compile script body
-        const scriptState = {
-            currentLine: 0,
-            nestingList: [],
-            consecutiveBlankLines: 0
-        };
-        
-        while (scriptState.currentLine < scriptLines.length) {
-            const originalLineNum = lineNum;
-            lineNum = lineNumberOffset + scriptState.currentLine;
-            compileStatement(scriptState, scriptLines);
-            lineNum = originalLineNum;
-        }
-        
-        // Ensure proper script termination
-        endCurrentScript();
-        
-        // Merge back into main block list
-        Object.assign(savedState.blockList, blockList);
-        
-        console.log(`Successfully compiled script: ${scriptName}`);
-        
-    } catch (error) {
-        // Restore state on error
-        blockList = savedState.blockList;
-        blockID = savedState.blockID;
-        blockY = savedState.blockY;
-        firstBlockInScript = savedState.firstBlockInScript;
-        throw error;
-    } finally {
-        // Restore state
-        blockList = savedState.blockList;
-        blockID = savedState.blockID;
-        blockY = savedState.blockY;
-        firstBlockInScript = savedState.firstBlockInScript;
     }
+    
+    return scripts;
 }
 
+// A state is an object with nestingList and currentLine
 function compileStatement(state, codeLines) {
+    // Modifies the callers state
     let line = codeLines[state.currentLine++];
     lineNum = state.currentLine;
     line = line.trim();
-    
-    // Skip empty lines and comments
-    if (line === "" || line.startsWith("//")) {
-        return;
-    }
-    
     console.log("line", line);
-    
-    // Handle script blocks - MUST check this before regular parsing
-    if (line.startsWith("script")) {
-        parseScriptBlock(line, state, codeLines);
+    if (line.startsWith("//") || line == "") {
         return;
-    }
-    
-    // Check if this is a hat block starting a new script
-    if (isLineHatBlock(line) && !firstBlockInScript) {
-        endCurrentScript();
-        firstBlockInScript = true;
-        blockY += 90;
     }
     
     if (line == "}") {
         if (state.nestingList.length == 0) {
             compileError("Unexpected '}'");
         }
-        endCurrentScript(state.nestingList.length);
+        let keys = Object.keys(blockList);
+        for (let i = keys.length - 1; i >= 0; i--) {
+            let key = keys[i];
+            if (blockList[key].next && blockList[key].nestingLevel == state.nestingList.length) {
+                blockList[key].next = null; // TO DO: Don't end program prematurely in the case of empty loops
+                break;
+            }
+        }
         state.nestingList.pop();
         return;
     }
-    
     if (line.replaceAll(" ", "") == "}else{") {
-        endCurrentScript(state.nestingList.length);
-        
         let keys = Object.keys(blockList);
+        console.log("looking for if", blockList, keys);
+
+        for (let i = keys.length - 1; i >= 0; i--) {
+            let key = keys[i];
+            if (blockList[key].next && blockList[key].nestingLevel == state.nestingList.length) {
+                blockList[key].next = null;
+                break;
+            }
+        }
+
         let found = false;
         for (let i = keys.length - 1; i >= 0; i--) {
             let key = keys[i];
@@ -536,15 +589,16 @@ function compileStatement(state, codeLines) {
         if (!found) {
             compileError("could not find if");
         }
+        // state.nestingList.pop();
         return;
     }
-    
-    if (line.startsWith("repeat") || line.startsWith("while") || line.startsWith("if (") || line.startsWith("if(")) {
+    if (line.startsWith("repeat") || line.startsWith("while") || line.startsWith("if (") || line.startsWith("if(") /*  && line.endsWith("{") */) {
         console.log("found repeat/if!");
         let repeatCountExpression = parseBlock(line.slice(0, line.length - 2));
         let repeatID = blockID + 1;
         compileBlock(repeatCountExpression, blockID, state.nestingList.length);
-        blockList[repeatID.toString()].inputs.SUBSTACK = [2, (blockID + 1).toString()];
+        // blockID++
+        blockList[repeatID.toString()].inputs.SUBSTACK = [2, (blockID /*repeatID*/ + 1).toString()]; // To do: deal with empty loop
 
         let nestingDepth = state.nestingList.length;
         state.nestingList.push(repeatID);
@@ -552,13 +606,13 @@ function compileStatement(state, codeLines) {
             compileStatement(state, codeLines);
         }
         blockList[repeatID.toString()].next = (blockID + 1).toString();
+        // do cool stuff :D ???
     } else {
-        let id = blockID + 1;
-        compileBlock(parseBlock(line), blockID, state.nestingList.length);
+        // Compile one ordinary block
+        let id = blockID + 1; // The ID of the next block to be compiled
+        compileBlock(parseBlock(line), blockID, state.nestingList.length); // Changes block ID by however many blocks were compiled
         blockList[id.toString()].next = (blockID + 1).toString();
     }
-    
-    firstBlockInScript = false;
 }
 
 function clearVariablesAndLists(keepGlobal) {
@@ -583,24 +637,57 @@ function compileSprite(sprite) {
     spriteBeingCompiled = sprite;
 
     let codeLines = codeList[sprite].replaceAll("\r", "").split("\n");
-    codeLines = handleSpecial(codeLines);
-    let currentLine = 0;
+    codeLines = handleSpecial(codeLines); // Handles forever loops
+    
+    // Extract script blocks instead of using blank line separation
+    let scripts = extractScriptBlocks(codeLines);
+    
     blockY = 0;
-    firstBlockInScript = true;
     blockList = {};
     clearVariablesAndLists(true);
     lineNum = 0;
-    let state = { 
-        currentLine: currentLine, 
-        nestingList: [],
-        consecutiveBlankLines: 0
-    };
 
-    while (state.currentLine < codeLines.length) {
-        compileStatement(state, codeLines);
+    // Compile each script block separately
+    for (let script of scripts) {
+        firstBlockInScript = true;
+        lineNum = script.startLine;
+        
+        // Handle the script header
+        let headerLine = script.header.trim();
+        
+        // Check if it's a "script" block (no hat block)
+        if (headerLine.startsWith("script") && headerLine.endsWith("{")) {
+            // No hat block, just start with the body
+        } else if (headerLine.endsWith("() {")) {
+            // Hat block - compile it first
+            let hatBlockName = headerLine.slice(0, -4); // Remove "() {"
+            let hatBlockExpression = parseBlock(hatBlockName + "()");
+            compileBlock(hatBlockExpression, blockID, 0);
+        }
+        
+        // Compile the script body
+        let state = { currentLine: 0, nestingList: [] };
+        let bodyLines = script.body;
+        
+        while (state.currentLine < bodyLines.length) {
+            compileStatement(state, bodyLines);
+        }
+        
+        // Terminate the current script chain
+        let keys = Object.keys(blockList);
+        for (let i = keys.length - 1; i >= 0; i--) {
+            let key = keys[i];
+            if (blockList[key].next && blockList[key].nestingLevel == 0) {
+                blockList[key].next = null;
+                break;
+            }
+        }
+        
+        // Move to next script position
+        blockY += 90;
     }
+
     blockID += 2;
-    
     let newSprite = {
         isStage: false,
         name: sprite == "stage" ? "Stage" : Base64.decode(sprite),
@@ -623,16 +710,15 @@ function compileSprite(sprite) {
     };
 
     if (sprite == "stage") {
-        newSprite.tempo = 60;
-        newSprite.videoTransparency = 50;
-        newSprite.videoState = "on";
-        newSprite.textToSpeechLanguage = null;
+        (newSprite.tempo = 60), (newSprite.videoTransparency = 50), (newSprite.videoState = "on"), (newSprite.textToSpeechLanguage = null);
         newSprite.isStage = true;
         delete newSprite.x;
         delete newSprite.y;
     }
     return newSprite;
 }
+
+let spriteBeingCompiled;
 
 async function compile() {
     let compiled;
@@ -655,13 +741,13 @@ async function compile() {
                 },
             },
         };
-        
         spriteBeingCompiled = null;
         for (let sprite of spriteList) {
             compiled.targets.push(compileSprite(sprite));
         }
-        compiled.targets[0].broadcasts = getBroadcasts();
-        
+        compiled.targets[0].broadcasts = getBroadcasts(); // Add broadcasts to the stage
+        console.log(compiled);
+        console.log(JSON.stringify(compiled, null, 4));
     } catch (e) {
         if (!e.message.startsWith("CompileError")) {
             alert("An unexpected error was encountered while compiling — " + e.message);
@@ -679,7 +765,6 @@ async function compile() {
             zip.file(assetID, assets.list[assetID]);
         }
     }
-    
     let blob = await zip.generateAsync({
         type: "blob",
         compression: "DEFLATE",
@@ -688,7 +773,12 @@ async function compile() {
         },
     });
 
-    return await blob.arrayBuffer();
+    console.log("blob", blob);
+    console.time("arraybuffer");
+    let a = await blob.arrayBuffer();
+    console.timeEnd("arraybuffer");
+    window.output10 = a;
+    return a;
 }
 
 async function run() {
