@@ -1,5 +1,4 @@
 function handleSpecial(lines) {
-    // Replaces forever loops with repeat infinity for now
     let code = [];
     for (let line of lines) {
         if (line.trim().startsWith("forever()") && line.trim().endsWith("{")) {
@@ -12,7 +11,6 @@ function handleSpecial(lines) {
 }
 
 function getParamsArray(params) {
-    // Parses a function string and results the params
     let str = params.slice(1, params.length - 1);
     if (str == "") {
         return [];
@@ -24,7 +22,6 @@ function getParamsArray(params) {
     let output = [];
     let start = 0;
     let inString = false;
-    // console.log(str);
     let i = 0;
     for (char of str) {
         if (!inString) {
@@ -45,26 +42,18 @@ function getParamsArray(params) {
         i += 1;
     }
     output.push(str.slice(start, i).trim());
-
-    // console.log(output);
-    return output; // Returns a list
+    return output;
 }
 
 function parseBlock(str) {
-    // Parse block recursively making a nested list of lists
-    // Returns a list of terms
-    // A term is either a literal value or a function name
-    // A term is an Object
     str = str.trim();
     if (str.startsWith('"')) {
-        // String
         return str.slice(1, str.length - 1);
     }
     if (!isNaN(parseFloat(str))) {
         return parseFloat(str);
     }
     if (isNaN(parseFloat(str)) && !str.startsWith('"')) {
-        // if (!str.startsWith("$") /* || !str.startsWith("#") */) {
         if (!(str.startsWith("$") || str.startsWith("#") || str == "true" || str == "false")) {
             if (!str.includes("(")) {
                 compileError("Missing '('");
@@ -90,9 +79,6 @@ function parseBlock(str) {
                 }
             }
         }
-        // for (let paramsStr of paramsStringsArray) {
-
-        // }
     }
 }
 
@@ -133,15 +119,6 @@ function getBroadcasts() {
 }
 
 function getCostumes(sprite) {
-    let example = {
-        name: "costume1",
-        bitmapResolution: 1,
-        dataFormat: "svg",
-        assetId: "bcf454acf82e4504149f7ffe07081dbc",
-        md5ext: "bcf454acf82e4504149f7ffe07081dbc.svg",
-        rotationCenterX: 48,
-        rotationCenterY: 50,
-    };
     let createdCostumeList = [];
     for (let costume of assets.sprites[sprite].costumeList) {
         let newCostume = {
@@ -159,15 +136,6 @@ function getCostumes(sprite) {
 }
 
 function getSounds(sprite) {
-    let example = {
-        name: "Meow",
-        assetId: "83c36d806dc92327b9e7049a565c6bff",
-        dataFormat: "wav",
-        format: "",
-        rate: 48000,
-        sampleCount: 40682,
-        md5ext: "83c36d806dc92327b9e7049a565c6bff.wav",
-    };
     let createdSoundList = [];
     for (let sound of assets.sprites[sprite].soundList) {
         let newSound = {
@@ -185,19 +153,10 @@ function compileError(err) {
     throw { name: "CompileError", message: `CompileError on line ${lineNum} in sprite ${getSpriteName(spriteBeingCompiled, true)} — ${err}` };
 }
 
-const input1 = '"3"';
-const output1 = "3";
-const input2 = "3.14159";
-const output2 = 3.14159;
-const input3 = "pickRandom(1, 10)";
-const output3 = ["pickRandom", 1, 10];
-const input4 = 'sayForSecs(pickRandom(1, pickRandom(5, "10")), 2.5)';
-
 const variableStartThing = "$`!jsf☠d_Why are you looking here_89ISf[$!☠$~$";
 const listStartThing = "#`!j☠sf_Why are you looking here?_d7S&pSf]]@$!☠#~#";
 
 let blockID;
-// let scriptBlockCount;
 let blockY;
 let firstBlockInScript;
 let blockList;
@@ -205,33 +164,17 @@ let variables;
 let lists;
 let broadcasts;
 let lineNum;
+let spriteBeingCompiled;
 
 function compileBlock(code, parent, nestingLevel) {
-    // console.log("linestr", lineString)
-    // if (lineString.startsWith("//") || lineString == "") {
-    //     return;
-    // }
     blockID += 1;
     let myID = blockID;
-    // let parsedCode = parse(lineString);
     let parsedCode = code;
 
     let block = {};
 
-    // if (parsedCode[0].startsWith("$")) {
-    //     console.log("variable get")
-    //     let varName = parsedCode[0].slice(1)
-    //     if (varName == "") {
-    //         compileError("Variable name is blank")
-    //     }
-    //     block = [12, varName, variables[varName].id]
-    // } else {
-
     let funcName = parsedCode.shift();
-    console.log("funcname", funcName);
     let params = parsedCode;
-    console.log("inputs", params);
-    console.log("id", myID);
 
     if (!funcName) {
         compileError("Function name is undefined");
@@ -261,53 +204,12 @@ function compileBlock(code, parent, nestingLevel) {
         blockY += 70;
     }
 
-    // let doNormal = false;
-    // dropdownBlock: if (blockData[funcName].dropdown == "block") {
-    //     let dropBlockID = (blockID + 1).toString();
-    //     let dropBlock = {
-    //         parent: myID.toString(),
-    //         next: null,
-    //         inputs: {},
-    //         fields: {},
-    //         shadow: true,
-    //     };
-
-    //     for (let [i, param] of params.entries()) {
-    //         let item = blockData[funcName].dropdownOpcode[i];
-    //         if (item != null) {
-    //             console.log("dropblock", item, param);
-    //             if (typeof param == "object") {
-    //                 console.log("canceling...", param);
-    //                 block.inputs = {};
-    //                 doNormal = true;
-    //                 break dropdownBlock;
-    //             }
-    //             dropBlock.opcode = item;
-    //             dropBlock.fields[blockData[funcName].inputs[i]] = [param, null];
-    //             block.inputs[blockData[funcName].inputs[i]] = [1, dropBlockID];
-    //         } else {
-    //             block.inputs[blockData[funcName].inputs[i]] = [1, [10, param]];
-    //         }
-    //     }
-
-    //     console.log(dropBlock);
-    //     blockList[dropBlockID] = dropBlock;
-    //     blockID += 1;
-    // } else {
-    //     doNormal = true;
-    // }
     let doNormal = true;
 
     if (doNormal) {
         for (let [i, param] of params.entries()) {
-            // Hamdle putting in parameters
-            console.log("param", i, param);
             if (typeof param == "object") {
-                // Another block
-                block.inputs[blockData[funcName].inputs[i]] = [3, (blockID + 1).toString()]; // If the input is a block
-                // if (block.type != "boolean" && !funcName.startsWith("if")) {
-                //     block.inputs[blockData[funcName].inputs[i]][2] = [10, ""];
-                // }
+                block.inputs[blockData[funcName].inputs[i]] = [3, (blockID + 1).toString()];
                 compileBlock(param, myID);
             } else {
                 dropBlockIf: if (blockData[funcName].dropdown == "block") {
@@ -321,9 +223,7 @@ function compileBlock(code, parent, nestingLevel) {
                     };
                     let item = blockData[funcName].dropdownOpcode[i];
                     if (item != null) {
-                        console.log("dropblock", item, param);
                         if (typeof param == "object") {
-                            console.log("canceling...", param);
                             block.inputs[i] = {};
                             doNormal = true;
                             break dropBlockIf;
@@ -338,13 +238,9 @@ function compileBlock(code, parent, nestingLevel) {
                 }
 
                 if (blockData[funcName].dropdownInputs) {
-                    // block contains a square dropdown
                     if (blockData[funcName].dropdownInputs[i] != null) {
-                        // only replace input if it is a dropdown
-                        block.fields[blockData[funcName].inputs[i]] = [param, null]; // second param has to be null for some reason
+                        block.fields[blockData[funcName].inputs[i]] = [param, null];
 
-                        // variables
-                        // if (funcName == "setVar" || funcName == "changeVar") {
                         if (blockData[funcName].category) {
                             if (blockData[funcName].category == "variable") {
                                 let varID;
@@ -361,12 +257,8 @@ function compileBlock(code, parent, nestingLevel) {
                                 }
                                 block.fields[blockData[funcName].inputs[i]][1] = varID;
                             }
-                            // }
 
-                            // lists
-                            // if (blockData[funcName].category) {
                             if (blockData[funcName].category == "list") {
-                                console.log("found list", param);
                                 let listID;
                                 if (lists[param]) {
                                     listID = lists[param].id;
@@ -383,9 +275,7 @@ function compileBlock(code, parent, nestingLevel) {
                             }
                         }
 
-                        // broadcast received block - only one with a dropdown
                         if (blockData[funcName].opcode == "event_whenbroadcastreceived") {
-                            console.log("found broadcast", param);
                             let brID;
                             if (broadcasts[param]) {
                                 brID = broadcasts[param].id;
@@ -401,9 +291,7 @@ function compileBlock(code, parent, nestingLevel) {
                     }
                 }
                 if (param.toString().startsWith(variableStartThing)) {
-                    // variable
                     let varName = param.toString().slice(variableStartThing.length + 1);
-                    console.log("varname", varName);
                     if (varName == "") {
                         compileError("Variable name is blank");
                     }
@@ -414,7 +302,6 @@ function compileBlock(code, parent, nestingLevel) {
                 } else {
                     if (param.toString().startsWith(listStartThing)) {
                         let listName = param.toString().slice(listStartThing.length + 1);
-                        console.log("listname", listName);
                         if (listName == "") {
                             compileError("List name is blank");
                         }
@@ -424,7 +311,6 @@ function compileBlock(code, parent, nestingLevel) {
                         block.inputs[blockData[funcName].inputs[i]] = [3, [13, listName, lists[listName].id]];
                     } else {
                         if (funcName.startsWith("broadcast")) {
-                            console.log("found broadcast block");
                             let brID;
                             if (broadcasts[param]) {
                                 brID = broadcasts[param].id;
@@ -435,20 +321,17 @@ function compileBlock(code, parent, nestingLevel) {
                             }
                             block.inputs[blockData[funcName].inputs[i]] = [1, [11, param.toString(), brID]];
                         } else {
-                            block.inputs[blockData[funcName].inputs[i]] = [1, [10, param]]; // regular string or number
+                            block.inputs[blockData[funcName].inputs[i]] = [1, [10, param]];
                         }
                     }
                 }
 
                 if (funcName.toLowerCase().includes("color")) {
-                    // special case color inputs
                     if (param.toString().startsWith("#")) {
-                        console.log("making color input");
-                        block.inputs[blockData[funcName].inputs[i]][1][0] = 9; // type 9 is color
+                        block.inputs[blockData[funcName].inputs[i]][1][0] = 9;
                     }
                 }
             }
-            console.log("current inputs", block.inputs);
         }
         if (params && blockData[funcName].inputs) {
             let got = params.length;
@@ -458,70 +341,178 @@ function compileBlock(code, parent, nestingLevel) {
             }
         }
     }
-    // }
 
-    // block.next = blockID + 1
     blockList[myID.toString()] = block;
 }
 
-const nestingType = {
-    REPEAT: "repeat",
-    IFTHEN: "ifthen",
-    IFTHENELSE: "ifthenelse",
-};
+function endCurrentScript(nestingLevel = 0) {
+    let keys = Object.keys(blockList);
+    for (let i = keys.length - 1; i >= 0; i--) {
+        let key = keys[i];
+        if (blockList[key].next && blockList[key].nestingLevel == nestingLevel) {
+            blockList[key].next = null;
+            break;
+        }
+    }
+}
 
-// A state is an object with nestingList and currentLine
+function isLineHatBlock(line) {
+    const hatBlocks = [
+        'whenGreenFlag()',
+        'whenKeyPressed(',
+        'whenClicked()',
+        'whenBroadcastReceived(',
+        'whenBackdropSwitches(',
+        'whenGreaterThan(',
+        'whenIReceive('
+    ];
+    return hatBlocks.some(hat => line.startsWith(hat));
+}
+
+function parseScriptBlock(initialLine, state, codeLines) {
+    const scriptMatch = initialLine.match(/^script\s+([^{(\s]*)\s*(?:\(([^)]*)\))?\s*\{$/);
+    if (!scriptMatch) {
+        compileError("Invalid script declaration. Use: script [name] { or script [name] (x,y) {");
+    }
+    
+    const scriptName = scriptMatch[1].trim() || "anonymous";
+    const positionArgs = scriptMatch[2] ? scriptMatch[2].split(',').map(arg => arg.trim()) : [];
+    
+    // Save current state
+    const savedState = {
+        blockList: {...blockList},
+        blockID: blockID,
+        blockY: blockY,
+        firstBlockInScript: firstBlockInScript,
+        variables: {...variables},
+        lists: {...lists}
+    };
+    
+    try {
+        // Initialize new script environment
+        blockList = {};
+        firstBlockInScript = true;
+        
+        // Set position if specified
+        if (positionArgs.length === 2) {
+            const x = parseInt(positionArgs[0]);
+            const y = parseInt(positionArgs[1]);
+            if (!isNaN(x) && !isNaN(y)) {
+                blockY = y;
+            } else {
+                blockY += 90;
+            }
+        } else {
+            blockY += 90;
+        }
+        
+        // Parse script body
+        let braceDepth = 1;
+        const scriptLines = [];
+        let lineNumberOffset = state.currentLine;
+        
+        while (state.currentLine < codeLines.length && braceDepth > 0) {
+            let line = codeLines[state.currentLine];
+            const trimmedLine = line.trim();
+            
+            if (trimmedLine === "{") {
+                braceDepth++;
+            } else if (trimmedLine === "}") {
+                braceDepth--;
+                if (braceDepth === 0) {
+                    state.currentLine++;
+                    break;
+                }
+            }
+            
+            if (braceDepth > 0) {
+                scriptLines.push(line);
+            }
+            state.currentLine++;
+        }
+        
+        if (braceDepth > 0) {
+            compileError("Unclosed script block");
+        }
+        
+        // Compile script body
+        const scriptState = {
+            currentLine: 0,
+            nestingList: [],
+            consecutiveBlankLines: 0
+        };
+        
+        while (scriptState.currentLine < scriptLines.length) {
+            const originalLineNum = lineNum;
+            lineNum = lineNumberOffset + scriptState.currentLine;
+            compileStatement(scriptState, scriptLines);
+            lineNum = originalLineNum;
+        }
+        
+        // Ensure proper script termination
+        endCurrentScript();
+        
+        // Merge back into main block list
+        Object.assign(savedState.blockList, blockList);
+        
+        console.log(`Successfully compiled script: ${scriptName}`);
+        
+    } catch (error) {
+        // Restore state on error
+        blockList = savedState.blockList;
+        blockID = savedState.blockID;
+        blockY = savedState.blockY;
+        firstBlockInScript = savedState.firstBlockInScript;
+        variables = savedState.variables;
+        lists = savedState.lists;
+        throw error;
+    } finally {
+        // Restore state
+        blockList = savedState.blockList;
+        blockID = savedState.blockID;
+        blockY = savedState.blockY;
+        firstBlockInScript = savedState.firstBlockInScript;
+        variables = savedState.variables;
+        lists = savedState.lists;
+    }
+}
+
 function compileStatement(state, codeLines) {
-    // Modifies the callers state
     let line = codeLines[state.currentLine++];
     lineNum = state.currentLine;
     line = line.trim();
-    console.log("line", line);
-    if (line.startsWith("//") /*  || line == "" */) {
+    
+    // Skip empty lines and comments
+    if (line === "" || line.startsWith("//")) {
         return;
     }
-    if (line == "") {
-        let keys = Object.keys(blockList);
-        for (let i = keys.length - 1; i >= 0; i--) {
-            let key = keys[i];
-            if (blockList[key].next && blockList[key].nestingLevel == 0) {
-                blockList[key].next = null; // TO DO: Don't end program prematurely in the case of empty loops
-                break;
-            }
-        }
-
+    
+    // Handle script blocks
+    if (line.startsWith("script")) {
+        parseScriptBlock(line, state, codeLines);
+        return;
+    }
+    
+    // Check if this is a hat block starting a new script
+    if (isLineHatBlock(line) && !firstBlockInScript) {
+        endCurrentScript();
         firstBlockInScript = true;
         blockY += 90;
-        console.log("starting new script on", state.currentLine);
-        return;
     }
+    
     if (line == "}") {
         if (state.nestingList.length == 0) {
             compileError("Unexpected '}'");
         }
-        let keys = Object.keys(blockList);
-        for (let i = keys.length - 1; i >= 0; i--) {
-            let key = keys[i];
-            if (blockList[key].next && blockList[key].nestingLevel == state.nestingList.length) {
-                blockList[key].next = null; // TO DO: Don't end program prematurely in the case of empty loops
-                break;
-            }
-        }
+        endCurrentScript(state.nestingList.length);
         state.nestingList.pop();
         return;
     }
+    
     if (line.replaceAll(" ", "") == "}else{") {
+        endCurrentScript(state.nestingList.length);
+        
         let keys = Object.keys(blockList);
-        console.log("looking for if", blockList, keys);
-
-        for (let i = keys.length - 1; i >= 0; i--) {
-            let key = keys[i];
-            if (blockList[key].next && blockList[key].nestingLevel == state.nestingList.length) {
-                blockList[key].next = null;
-                break;
-            }
-        }
-
         let found = false;
         for (let i = keys.length - 1; i >= 0; i--) {
             let key = keys[i];
@@ -535,16 +526,14 @@ function compileStatement(state, codeLines) {
         if (!found) {
             compileError("could not find if");
         }
-        // state.nestingList.pop();
         return;
     }
-    if (line.startsWith("repeat") || line.startsWith("while") || line.startsWith("if (") || line.startsWith("if(") /*  && line.endsWith("{") */) {
-        console.log("found repeat/if!");
+    
+    if (line.startsWith("repeat") || line.startsWith("while") || line.startsWith("if (") || line.startsWith("if(")) {
         let repeatCountExpression = parseBlock(line.slice(0, line.length - 2));
         let repeatID = blockID + 1;
         compileBlock(repeatCountExpression, blockID, state.nestingList.length);
-        // blockID++
-        blockList[repeatID.toString()].inputs.SUBSTACK = [2, (blockID /*repeatID*/ + 1).toString()]; // To do: deal with empty loop
+        blockList[repeatID.toString()].inputs.SUBSTACK = [2, (blockID + 1).toString()];
 
         let nestingDepth = state.nestingList.length;
         state.nestingList.push(repeatID);
@@ -552,13 +541,13 @@ function compileStatement(state, codeLines) {
             compileStatement(state, codeLines);
         }
         blockList[repeatID.toString()].next = (blockID + 1).toString();
-        // do cool stuff :D ???
     } else {
-        // Compile one ordinary block
-        let id = blockID + 1; // The ID of the next block to be compiled
-        compileBlock(parseBlock(line), blockID, state.nestingList.length); // Changes block ID by however many blocks were compiled
+        let id = blockID + 1;
+        compileBlock(parseBlock(line), blockID, state.nestingList.length);
         blockList[id.toString()].next = (blockID + 1).toString();
     }
+    
+    firstBlockInScript = false;
 }
 
 function clearVariablesAndLists(keepGlobal) {
@@ -583,22 +572,24 @@ function compileSprite(sprite) {
     spriteBeingCompiled = sprite;
 
     let codeLines = codeList[sprite].replaceAll("\r", "").split("\n");
-    codeLines = handleSpecial(codeLines); // Handles forever loops
+    codeLines = handleSpecial(codeLines);
     let currentLine = 0;
     blockY = 0;
     firstBlockInScript = true;
-    scriptBlockCount = 0;
     blockList = {};
-    // variables = {};
-    // lists = {};
     clearVariablesAndLists(true);
     lineNum = 0;
-    let state = { currentLine: currentLine, nestingList: [] };
+    let state = { 
+        currentLine: currentLine, 
+        nestingList: [],
+        consecutiveBlankLines: 0
+    };
 
     while (state.currentLine < codeLines.length) {
         compileStatement(state, codeLines);
     }
     blockID += 2;
+    
     let newSprite = {
         isStage: false,
         name: sprite == "stage" ? "Stage" : Base64.decode(sprite),
@@ -609,19 +600,8 @@ function compileSprite(sprite) {
         currentCostume: 0,
         broadcasts: {},
         costumes: getCostumes(sprite),
-        sounds: getSounds(sprite) /*[
-            {
-            "name": "Meow",
-            "assetId": "83c36d806dc92327b9e7049a565c6bff",
-            "dataFormat": "wav",
-            "format": "",
-            "rate": 48000,
-            "sampleCount": 40682,
-            "md5ext": "83c36d806dc92327b9e7049a565c6bff.wav"
-            }
-        ],*/,
+        sounds: getSounds(sprite),
         volume: 100,
-        // "layerOrder": 2,
         visible: true,
         x: 0,
         y: 0,
@@ -632,41 +612,24 @@ function compileSprite(sprite) {
     };
 
     if (sprite == "stage") {
-        // newSprite.broadcasts = getBroadcasts()
-        (newSprite.tempo = 60), (newSprite.videoTransparency = 50), (newSprite.videoState = "on"), (newSprite.textToSpeechLanguage = null);
+        newSprite.tempo = 60;
+        newSprite.videoTransparency = 50;
+        newSprite.videoState = "on";
+        newSprite.textToSpeechLanguage = null;
         newSprite.isStage = true;
-        // newSprite.layerOrder = 0;
-        // delete newSprite.layerOrder
         delete newSprite.x;
         delete newSprite.y;
     }
     return newSprite;
 }
 
-let spriteBeingCompiled;
-
 async function compile() {
     let compiled;
     try {
-        // let codeLines = document.querySelector("#editor").value.replaceAll("\r", "").split("\n");
-        // let codeLines = codemirror.state.doc.toString().replaceAll("\r", "").split("\n");
-        // codeLines = handleSpecial(codeLines); // Handles forever loops
-        // let currentLine = 0;
         blockID = 0;
-        // blockY = 0;
-        // firstBlockInScript = true;
-        // scriptBlockCount = 0;
-        // blockList = {};
-        // variables = {};
         broadcasts = {};
         clearVariablesAndLists();
-        // lists = {};
-        // lineNum = 0;
-        // let state = { currentLine: currentLine, nestingList: [] };
-
-        // while (state.currentLine < codeLines.length) {
-        //     compileStatement(state, codeLines);
-        // }
+        
         compiled = {
             targets: [],
             monitors: [],
@@ -681,13 +644,13 @@ async function compile() {
                 },
             },
         };
+        
         spriteBeingCompiled = null;
         for (let sprite of spriteList) {
             compiled.targets.push(compileSprite(sprite));
         }
-        compiled.targets[0].broadcasts = getBroadcasts(); // Add broadcasts to the stage
-        console.log(compiled);
-        console.log(JSON.stringify(compiled, null, 4));
+        compiled.targets[0].broadcasts = getBroadcasts();
+        
     } catch (e) {
         if (!e.message.startsWith("CompileError")) {
             alert("An unexpected error was encountered while compiling — " + e.message);
@@ -697,92 +660,7 @@ async function compile() {
         }
         return null;
     }
-    // for (let line of codeLines) {
-    //     line = line.trim()
-    //     if (line.startsWith("//") || line == "") {
-    //         continue
-    //     }
-    //     let id = blockID + 1; // The ID of the next block to be compiled
-    //     compileBlock(parseBlock(line), blockID); // Changes block ID by however many blocks were compiled
-    //     blockList[id.toString()].next = (blockID + 1).toString();
-    // }
-    // console.log(blockList);
-    // console.log(variables);
-
-    // let json = `{
-    //     "targets": [
-    //         {
-    //         "isStage": true,
-    //         "name": "Stage",
-    //         "variables": {},
-    //         "lists": {},
-    //         "broadcasts": ${JSON.stringify(getBroadcasts(), null, 4)},
-    //         "blocks": {},
-    //         "comments": {},
-    //         "currentCostume": 0,
-    //         "costumes": [
-    //             {
-    //             "name": "backdrop1",
-    //             "dataFormat": "svg",
-    //             "assetId": "cd21514d0531fdffb22204e0ec5ed84a",
-    //             "md5ext": "cd21514d0531fdffb22204e0ec5ed84a.svg",
-    //             "rotationCenterX": 240,
-    //             "rotationCenterY": 180
-    //             }
-    //         ],
-    //         "sounds": [],
-    //         "volume": 100,
-    //         "layerOrder": 0,
-    //         "tempo": 60,
-    //         "videoTransparency": 50,
-    //         "videoState": "on",
-    //         "textToSpeechLanguage": null
-    //         },
-    //         {
-    //         "isStage": false,
-    //         "name": "Sprite1",
-    //         "variables": ${JSON.stringify(getVariables(), null, 4)},
-    //         "lists": ${JSON.stringify(getLists(), null, 4)},
-    //         "broadcasts": {},
-    //         "blocks": ${JSON.stringify(blockList, null, 4)},
-    //         "comments": {},
-    //         "currentCostume": 0,
-    //         "costumes": ${JSON.stringify(getCostumes(), null, 4)},
-    //         "sounds": [
-    //             {
-    //             "name": "Meow",
-    //             "assetId": "83c36d806dc92327b9e7049a565c6bff",
-    //             "dataFormat": "wav",
-    //             "format": "",
-    //             "rate": 48000,
-    //             "sampleCount": 40682,
-    //             "md5ext": "83c36d806dc92327b9e7049a565c6bff.wav"
-    //             }
-    //         ],
-    //         "volume": 100,
-    //         "layerOrder": 2,
-    //         "visible": true,
-    //         "x": 0,
-    //         "y": 0,
-    //         "size": 100,
-    //         "direction": 90,
-    //         "draggable": false,
-    //         "rotationStyle": "all around"
-    //         }
-    //     ],
-    //     "monitors": [],
-    //     "extensions": [],
-    //     "meta": {
-    //         "semver": "3.0.0",
-    //         "vm": "0.2.0",
-    //         "agent": "",
-    //         "platform": {
-    //             "name": "TurboWarp",
-    //             "url": "https://turbowarp.org/"
-    //         }
-    //     }
-    // }`;
-    // console.log(json)
+    
     let zip = new JSZip();
     zip.file("project.json", JSON.stringify(compiled, null, 4));
     for (let assetID of Object.keys(assets.list)) {
@@ -790,6 +668,7 @@ async function compile() {
             zip.file(assetID, assets.list[assetID]);
         }
     }
+    
     let blob = await zip.generateAsync({
         type: "blob",
         compression: "DEFLATE",
@@ -798,43 +677,12 @@ async function compile() {
         },
     });
 
-    console.log("blob", blob);
-    console.time("arraybuffer");
-    let a = await blob.arrayBuffer();
-    console.timeEnd("arraybuffer");
-    // a = blob
-    window.output10 = a;
-    return a;
-    // saveAs(blob, "hello.zip");
-    // return json;
+    return await blob.arrayBuffer();
 }
 
 async function run() {
     saveCurrentSpriteCode();
     let project = await compile();
-    // let r = await fetch("https://tmpfiles.org/api/v1/upload", {
-    //     method: "POST",
-    //     body: JSON.stringify({file: "test"})
-    // })
-    // document.getElementById("preview").src = "";
-
-    // const form = new FormData();
-    // form.append("file", new File([project], "CoolTestProject.sb3"));
-
-    // let r = await fetch("https://tmpfiles.org/api/v1/upload", {
-    //     method: "POST",
-    //     body: form,
-    // });
-
-    // let response = await r.json();
-    // if (response.data.url) {
-    //     let u = new URL(response.data.url);
-    //     let url = u.origin + "/dl" + u.pathname;
-    //     console.log(url);
-    //     document.getElementById("preview").src = `https://turbowarp.org/embed?project_url=${encodeURIComponent(`https://corsproxy.josueart40.workers.dev/?${url}`)}&autoplay&settings-button&addons=pause,remove-curved-stage-border,clones`;
-    // } else {
-    //     console.log(response);
-    // }
     document.getElementById("preview").hidden = false;
     document.getElementById("sprite-container").style.marginTop = "0px";
     if (project) {
