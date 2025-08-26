@@ -370,22 +370,25 @@ function isLineHatBlock(line) {
 }
 
 function parseScriptBlock(initialLine, state, codeLines) {
-    const scriptMatch = initialLine.match(/^script\s+([^{(\s]*)\s*(?:\(([^)]*)\))?\s*\{$/);
+    // More robust parsing that handles different script formats
+    const scriptMatch = initialLine.match(/^script\s+([a-zA-Z0-9_]+)\s*(?:\(([^)]*)\))?\s*\{?$/);
     if (!scriptMatch) {
-        compileError("Invalid script declaration. Use: script [name] { or script [name] (x,y) {");
+        compileError("Invalid script declaration. Use: script name { or script name (x,y) {");
     }
     
-    const scriptName = scriptMatch[1].trim() || "anonymous";
+    const scriptName = scriptMatch[1];
     const positionArgs = scriptMatch[2] ? scriptMatch[2].split(',').map(arg => arg.trim()) : [];
+    
+    // Check if we already have the opening brace or need to get it from next line
+    let hasOpeningBrace = initialLine.includes('{');
+    let braceDepth = hasOpeningBrace ? 1 : 0;
     
     // Save current state
     const savedState = {
         blockList: {...blockList},
         blockID: blockID,
         blockY: blockY,
-        firstBlockInScript: firstBlockInScript,
-        variables: {...variables},
-        lists: {...lists}
+        firstBlockInScript: firstBlockInScript
     };
     
     try {
@@ -407,9 +410,18 @@ function parseScriptBlock(initialLine, state, codeLines) {
         }
         
         // Parse script body
-        let braceDepth = 1;
         const scriptLines = [];
         let lineNumberOffset = state.currentLine;
+        
+        if (!hasOpeningBrace) {
+            // Get opening brace from next line
+            let nextLine = codeLines[state.currentLine++];
+            lineNum = state.currentLine;
+            if (nextLine.trim() !== '{') {
+                compileError("Expected '{' after script declaration");
+            }
+            braceDepth = 1;
+        }
         
         while (state.currentLine < codeLines.length && braceDepth > 0) {
             let line = codeLines[state.currentLine];
@@ -463,8 +475,6 @@ function parseScriptBlock(initialLine, state, codeLines) {
         blockID = savedState.blockID;
         blockY = savedState.blockY;
         firstBlockInScript = savedState.firstBlockInScript;
-        variables = savedState.variables;
-        lists = savedState.lists;
         throw error;
     } finally {
         // Restore state
@@ -472,8 +482,6 @@ function parseScriptBlock(initialLine, state, codeLines) {
         blockID = savedState.blockID;
         blockY = savedState.blockY;
         firstBlockInScript = savedState.firstBlockInScript;
-        variables = savedState.variables;
-        lists = savedState.lists;
     }
 }
 
@@ -487,7 +495,9 @@ function compileStatement(state, codeLines) {
         return;
     }
     
-    // Handle script blocks
+    console.log("line", line);
+    
+    // Handle script blocks - MUST check this before regular parsing
     if (line.startsWith("script")) {
         parseScriptBlock(line, state, codeLines);
         return;
@@ -530,6 +540,7 @@ function compileStatement(state, codeLines) {
     }
     
     if (line.startsWith("repeat") || line.startsWith("while") || line.startsWith("if (") || line.startsWith("if(")) {
+        console.log("found repeat/if!");
         let repeatCountExpression = parseBlock(line.slice(0, line.length - 2));
         let repeatID = blockID + 1;
         compileBlock(repeatCountExpression, blockID, state.nestingList.length);
