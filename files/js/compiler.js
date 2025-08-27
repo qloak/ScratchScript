@@ -61,14 +61,21 @@ function parseBlock(str) {
         return str.slice(1, str.length - 1);
     }
     if (!isNaN(parseFloat(str))) {
-        return parseFloat(str);
+    return parseFloat(str);
     }
-    if (isNaN(parseFloat(str)) && !str.startsWith('"')) {
-        // if (!str.startsWith("$") /* || !str.startsWith("#") */) {
-        if (!(str.startsWith("$") || str.startsWith("#") || str == "true" || str == "false")) {
-            if (!str.includes("(")) {
-                compileError("Missing '('");
-            }
+    
+    if (str === "true" || str === "false") {
+        return str;
+    }
+    
+    if (/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(str)) {
+        return str;
+    }
+    
+    if (!str.includes("(")) {
+        compileError("Missing '('");
+    }
+
             if (!str.includes(")")) {
                 compileError("Missing ')'");
             }
