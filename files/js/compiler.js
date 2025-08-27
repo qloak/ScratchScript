@@ -690,10 +690,46 @@ function compileStatement(state, codeLines) {
             compileError("Invalid condition expression");
         }
         let conditionText = line.slice(conditionStart, conditionEnd + 1); // includes parentheses
-        let parsedCondition = parseBlock(conditionText);
-        let repeatID = blockID + 1;
-        compileBlock(parsedCondition, blockID, state.nestingList.length);
-        blockList[repeatID.toString()].inputs.SUBSTACK = [2, (blockID + 1).toString()];
+        let opcode = line.startsWith("repeat") ? "control_repeat"
+           : line.startsWith("while") ? "control_while"
+           : line.startsWith("if") ? "control_if"
+           : null;
+
+        if (!opcode) compileError("Unknown control structure");
+        
+        let inputName = opcode === "control_repeat" ? "TIMES" : "CONDITION";
+        
+        let id = (blockID + 1).toString();
+        blockID += 1;
+        
+        let cond = parseBlock(conditionText);
+        let block = {
+            opcode: opcode,
+            inputs: {
+                [inputName]: Array.isArray(cond)
+                    ? [3, (blockID + 1).toString()]
+                    : [1, [typeof cond === "number" ? 10 : 11, cond]],
+            },
+            fields: {},
+            next: null,
+            parent: blockID.toString(),
+            shadow: false,
+            topLevel: false,
+            nestingLevel: state.nestingList.length,
+        };
+        
+        blockList[id] = block;
+        
+        // Compile nested condition block (if needed)
+        if (Array.isArray(cond)) compileBlock(cond, blockID, state.nestingList.length);
+        
+        block.inputs.SUBSTACK = [2, (blockID + 1).toString()];
+        let nestingDepth = state.nestingList.length;
+        state.nestingList.push(parseInt(id));
+        while (state.nestingList.length > nestingDepth) {
+            compileStatement(state, codeLines);
+        }
+        blockList[id].next = (blockID + 1).toString();
         let nestingDepth = state.nestingList.length;
         state.nestingList.push(repeatID);
         while (state.nestingList.length > nestingDepth) {
