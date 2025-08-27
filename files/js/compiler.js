@@ -51,56 +51,47 @@ function getParamsArray(params) {
 }
 
 function parseBlock(str) {
-    // Parse block recursively making a nested list of lists
-    // Returns a list of terms
-    // A term is either a literal value or a function name
-    // A term is an Object
     str = str.trim();
-    if (str.startsWith('"')) {
-        // String
-        return str.slice(1, str.length - 1);
+
+    // String literal
+    if (str.startsWith('"') && str.endsWith('"')) {
+        return str.slice(1, -1);
     }
+
+    // Number literal
     if (!isNaN(parseFloat(str))) {
-    return parseFloat(str);
+        return parseFloat(str);
     }
-    
+
+    // Boolean literals
     if (str === "true" || str === "false") {
         return str;
     }
-    
+
+    // Variable reference
     if (/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(str)) {
         return str;
     }
-    
-    if (!str.includes("(")) {
-        compileError("Missing '('");
+
+    // Variable or list pointer
+    if (str.startsWith("$")) {
+        return variableStartThing + str;
+    }
+    if (str.startsWith("#")) {
+        return listStartThing + str;
     }
 
-            if (!str.includes(")")) {
-                compileError("Missing ')'");
-            }
-
-            let functionName = str.slice(0, str.indexOf("(")).trim();
-            let paramsString = str.slice(str.indexOf("("));
-            let paramsStringsArray = getParamsArray(paramsString);
-            let paramTermsArray = paramsStringsArray.map((s) => parseBlock(s));
-
-            return [functionName].concat(paramTermsArray);
-        } else {
-            if (str == "true" || str == "false") {
-                return str;
-            } else {
-                if (str.startsWith("#")) {
-                    return listStartThing + str;
-                } else {
-                    return variableStartThing + str;
-                }
-            }
-        }
-        // for (let paramsStr of paramsStringsArray) {
-
-        // }
+    // Function call
+    if (!str.includes("(") || !str.includes(")")) {
+        compileError("Missing '(' or ')'");
     }
+
+    let functionName = str.slice(0, str.indexOf("(")).trim();
+    let paramsString = str.slice(str.indexOf("("));
+    let paramsStringsArray = getParamsArray(paramsString);
+    let paramTermsArray = paramsStringsArray.map((s) => parseBlock(s));
+
+    return [functionName].concat(paramTermsArray);
 }
 
 function getVariables() {
