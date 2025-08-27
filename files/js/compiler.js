@@ -203,6 +203,7 @@ let nextParentOverride;
 let startedFirstScript;
 let procArgStack;
 let baseBlockData = JSON.parse(JSON.stringify(blockData));
+let spriteBeingCompiled;
 
 function compileBlock(code, parent, nestingLevel) {
     // console.log("linestr", lineString)
@@ -800,7 +801,6 @@ function compileSprite(sprite) {
     return newSprite;
 }
 
-let spriteBeingCompiled;
 
 async function compile() {
     let compiled;
