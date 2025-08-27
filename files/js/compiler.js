@@ -63,37 +63,30 @@ function parseBlock(str) {
     if (!isNaN(parseFloat(str))) {
         return parseFloat(str);
     }
-    if (isNaN(parseFloat(str)) && !str.startsWith('"')) {
-        // if (!str.startsWith("$") /* || !str.startsWith("#") */) {
-        if (!(str.startsWith("$") || str.startsWith("#") || str == "true" || str == "false")) {
-            if (!str.includes("(")) {
-                compileError("Missing '('");
-            }
-            if (!str.includes(")")) {
-                compileError("Missing ')'");
-            }
-
-            let functionName = str.slice(0, str.indexOf("(")).trim();
-            let paramsString = str.slice(str.indexOf("("));
-            let paramsStringsArray = getParamsArray(paramsString);
-            let paramTermsArray = paramsStringsArray.map((s) => parseBlock(s));
-
-            return [functionName].concat(paramTermsArray);
-        } else {
-            if (str == "true" || str == "false") {
-                return str;
-            } else {
-                if (str.startsWith("#")) {
-                    return listStartThing + str;
-                } else {
-                    return variableStartThing + str;
-                }
-            }
-        }
-        // for (let paramsStr of paramsStringsArray) {
-
-        // }
+    if (str == "true" || str == "false") {
+        return str;
     }
+    if (str.startsWith("$")) {
+        return variableStartThing + str;
+    }
+    if (str.startsWith("#")) {
+        return listStartThing + str;
+    }
+    if (procArgStack && procArgStack.length && procArgStack[procArgStack.length - 1][str]) {
+        return argStartThing + str;
+    }
+    if (!str.includes("(")) {
+        compileError("Missing '('");
+    }
+    if (!str.includes(")")) {
+        compileError("Missing ')'");
+    }
+    let functionName = str.slice(0, str.indexOf("(")).trim();
+    let paramsString = str.slice(str.indexOf("("));
+    let paramsStringsArray = getParamsArray(paramsString);
+    let paramTermsArray = paramsStringsArray.map((s) => parseBlock(s));
+
+    return [functionName].concat(paramTermsArray);
 }
 
 function getVariables() {
@@ -195,6 +188,7 @@ const input4 = 'sayForSecs(pickRandom(1, pickRandom(5, "10")), 2.5)';
 
 const variableStartThing = "$`!jsf☠d_Why are you looking here_89ISf[$!☠$~$";
 const listStartThing = "#`!j☠sf_Why are you looking here?_d7S&pSf]]@$!☠#~#";
+const argStartThing = "@`!procArg☠DontLookHere_9fS$";
 
 let blockID;
 let blockY;
@@ -207,6 +201,8 @@ let lineNum;
 let customBlocks;
 let nextParentOverride;
 let startedFirstScript;
+let procArgStack;
+let baseBlockData = JSON.parse(JSON.stringify(blockData));
 
 function compileBlock(code, parent, nestingLevel) {
     // console.log("linestr", lineString)
@@ -414,6 +410,26 @@ function compileBlock(code, parent, nestingLevel) {
                         compileError(`There is no variable named '${varName}'`);
                     }
                     block.inputs[blockData[funcName].inputs[i]] = [3, [12, varName, variables[varName].id]];
+                } else if (param.toString().startsWith(argStartThing)) {
+                    let argName = param.toString().slice(argStartThing.length);
+                    let ctx = procArgStack[procArgStack.length - 1];
+                    let info = ctx && ctx[argName];
+                    if (!info) {
+                        compileError(`Unknown argument '${argName}'`);
+                    }
+                    let argBlockId = (blockID + 1).toString();
+                    block.inputs[blockData[funcName].inputs[i]] = [3, argBlockId];
+                    blockList[argBlockId] = {
+                        parent: myID.toString(),
+                        next: null,
+                        inputs: {},
+                        fields: { VALUE: [argName, info.id] },
+                        shadow: false,
+                        opcode: info.kind === "bool" ? "argument_reporter_boolean" : "argument_reporter_string_number",
+                        topLevel: false,
+                        nestingLevel: nestingLevel + 1,
+                    };
+                    blockID += 1;
                 } else {
                     if (param.toString().startsWith(listStartThing)) {
                         let listName = param.toString().slice(listStartThing.length + 1);
@@ -470,15 +486,15 @@ function compileBlock(code, parent, nestingLevel) {
 function parseCustomBlockHeader(s) {
     let parts = tokenizeHeaderKVs(s);
     let tokens = [];
-    let argNames = [];
+    let argInfos = [];
     for (let { key, val } of parts) {
         if (key === "label") tokens.push({ kind: "label", text: val });
         else if (key === "reporter") {
             tokens.push({ kind: "rep", name: val });
-            argNames.push(val);
+            argInfos.push({ name: val, kind: "rep" });
         } else if (key === "boolean") {
             tokens.push({ kind: "bool", name: val });
-            argNames.push(val);
+            argInfos.push({ name: val, kind: "bool" });
         } else {
             compileError(`Unknown custom block part '${key}'`);
         }
@@ -486,28 +502,30 @@ function parseCustomBlockHeader(s) {
     if (!tokens.length) compileError("Custom block header is empty");
     if (tokens[0].kind !== "label") compileError("Custom block must start with a label");
 
-    let codePieces = [], callPieces = [];
+    let codePieces = [];
     tokens.forEach(t => {
         if (t.kind === "label") {
             let text = t.text.trim();
             codePieces.push(text);
-            callPieces.push(text);
         }
         if (t.kind === "rep") {
             codePieces.push("%s");
-            callPieces.push(t.name.trim());
         }
         if (t.kind === "bool") {
             codePieces.push("%b");
-            callPieces.push(t.name.trim());
         }
     });
     let proccode = codePieces.join(" ").replace(/\s+/g, " ").trim();
-    let callName = callPieces.join("_").replace(/\s+/g, "_");
+    let callName = tokens[0].text.trim();
 
-    let argIds = argNames.map(() => Math.round(Math.random() * 1e15).toString());
+    let argIds = argInfos.map(() => Math.round(Math.random() * 1e15).toString());
+    let argNames = argInfos.map(t => t.name.trim());
+    let argMap = {};
+    argInfos.forEach((t, i) => {
+        argMap[argNames[i]] = { id: argIds[i], kind: t.kind };
+    });
     let protoId = Math.round(Math.random() * 1e15).toString();
-    return { proccode, argNames, argIds, protoId, callName };
+    return { proccode, argNames, argIds, argMap, protoId, callName };
 }
 
 function tokenizeHeaderKVs(s) {
@@ -619,6 +637,8 @@ function compileStatement(state, codeLines) {
         let defId = emitProcedureDefinition(meta, state.nestingList.length);
         nextParentOverride = defId;
         state.nestingList.push(defId);
+        if (!procArgStack) procArgStack = [];
+        procArgStack.push(meta.argMap);
         return;
     }
     if (line == "}") {
@@ -631,7 +651,10 @@ function compileStatement(state, codeLines) {
                     break;
                 }
             }
-            state.nestingList.pop();
+            let closing = state.nestingList.pop();
+            if (blockList[closing] && blockList[closing].opcode === "procedures_definition" && procArgStack && procArgStack.length) {
+                procArgStack.pop();
+            }
             return;
         }
         if (state.inScript) {
@@ -724,6 +747,9 @@ function compileSprite(sprite) {
     blockList = {};
     clearVariablesAndLists(true);
     lineNum = 0;
+    customBlocks = {};
+    procArgStack = [];
+    blockData = JSON.parse(JSON.stringify(baseBlockData));
     let state = { currentLine: currentLine, nestingList: [], inScript: false };
 
     while (state.currentLine < codeLines.length) {
@@ -789,6 +815,7 @@ async function compile() {
         customBlocks = {};
         nextParentOverride = null;
         startedFirstScript = false;
+        procArgStack = [];
 
         // while (state.currentLine < codeLines.length) {
         //     compileStatement(state, codeLines);
