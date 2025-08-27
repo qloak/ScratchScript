@@ -648,8 +648,8 @@ function compileStatement(state, codeLines) {
         }
         compileError("Unexpected '}'");
     }
-    if (!state.inScript) {
-        compileError("Statement outside of script block");
+    if (!state.inScript && state.nestingList.length === 0) {
+    compileError("Statement outside of script or custom block");
     }
     if (line.replaceAll(" ", "") == "}else{") {
         let keys = Object.keys(blockList);
