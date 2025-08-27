@@ -51,47 +51,49 @@ function getParamsArray(params) {
 }
 
 function parseBlock(str) {
+    // Parse block recursively making a nested list of lists
+    // Returns a list of terms
+    // A term is either a literal value or a function name
+    // A term is an Object
     str = str.trim();
-
-    // String literal
-    if (str.startsWith('"') && str.endsWith('"')) {
-        return str.slice(1, -1);
+    if (str.startsWith('"')) {
+        // String
+        return str.slice(1, str.length - 1);
     }
-
-    // Number literal
     if (!isNaN(parseFloat(str))) {
         return parseFloat(str);
     }
+    if (isNaN(parseFloat(str)) && !str.startsWith('"')) {
+        // if (!str.startsWith("$") /* || !str.startsWith("#") */) {
+        if (!(str.startsWith("$") || str.startsWith("#") || str == "true" || str == "false")) {
+            if (!str.includes("(")) {
+                compileError("Missing '('");
+            }
+            if (!str.includes(")")) {
+                compileError("Missing ')'");
+            }
 
-    // Boolean literals
-    if (str === "true" || str === "false") {
-        return str;
+            let functionName = str.slice(0, str.indexOf("(")).trim();
+            let paramsString = str.slice(str.indexOf("("));
+            let paramsStringsArray = getParamsArray(paramsString);
+            let paramTermsArray = paramsStringsArray.map((s) => parseBlock(s));
+
+            return [functionName].concat(paramTermsArray);
+        } else {
+            if (str == "true" || str == "false") {
+                return str;
+            } else {
+                if (str.startsWith("#")) {
+                    return listStartThing + str;
+                } else {
+                    return variableStartThing + str;
+                }
+            }
+        }
+        // for (let paramsStr of paramsStringsArray) {
+
+        // }
     }
-
-    // Variable reference
-    if (/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(str)) {
-        return str;
-    }
-
-    // Variable or list pointer
-    if (str.startsWith("$")) {
-        return variableStartThing + str;
-    }
-    if (str.startsWith("#")) {
-        return listStartThing + str;
-    }
-
-    // Function call
-    if (!str.includes("(") || !str.includes(")")) {
-        compileError("Missing '(' or ')'");
-    }
-
-    let functionName = str.slice(0, str.indexOf("(")).trim();
-    let paramsString = str.slice(str.indexOf("("));
-    let paramsStringsArray = getParamsArray(paramsString);
-    let paramTermsArray = paramsStringsArray.map((s) => parseBlock(s));
-
-    return [functionName].concat(paramTermsArray);
 }
 
 function getVariables() {
@@ -598,19 +600,20 @@ function compileStatement(state, codeLines) {
     let line = codeLines[state.currentLine++];
     lineNum = state.currentLine;
     line = line.trim();
-    if (line === "" || line.startsWith("//")) return;
-
-    // Script start
+    if (line === "" || line.startsWith("//")) {
+        return;
+    }
     if (line === "script{" || line === "script {") {
-        if (startedFirstScript) blockY += 90;
-        else startedFirstScript = true;
+        if (startedFirstScript) {
+            blockY += 90;
+        } else {
+            startedFirstScript = true;
+        }
         firstBlockInScript = true;
         state.inScript = true;
         return;
     }
-
-    // Custom block definition
-    if (line.startsWith("block [") && line.endsWith("{")) {
+    if (line.startsWith("block [") && (line.endsWith("{") || line.endsWith("{ "))) {
         let inside = line.slice(line.indexOf("[") + 1, line.lastIndexOf("]"));
         let meta = parseCustomBlockHeader(inside);
         let defId = emitProcedureDefinition(meta, state.nestingList.length);
@@ -618,9 +621,7 @@ function compileStatement(state, codeLines) {
         state.nestingList.push(defId);
         return;
     }
-
-    // Close block or script
-    if (line === "}") {
+    if (line == "}") {
         if (state.nestingList.length > 0) {
             let keys = Object.keys(blockList);
             for (let i = keys.length - 1; i >= 0; i--) {
@@ -647,14 +648,10 @@ function compileStatement(state, codeLines) {
         }
         compileError("Unexpected '}'");
     }
-
-    // Validate context
     if (!state.inScript && state.nestingList.length === 0) {
-        compileError("Statement outside of script or custom block");
+        compileError("Statement outside of script block");
     }
-
-    // Special case: "} else {"
-    if (line.replaceAll(" ", "") === "}else{") {
+    if (line.replaceAll(" ", "") == "}else{") {
         let keys = Object.keys(blockList);
         for (let i = keys.length - 1; i >= 0; i--) {
             let key = keys[i];
@@ -666,83 +663,35 @@ function compileStatement(state, codeLines) {
         let found = false;
         for (let i = keys.length - 1; i >= 0; i--) {
             let key = keys[i];
-            if (blockList[key].opcode === "control_if" && blockList[key].nestingLevel == state.nestingList.length - 1) {
+            if (blockList[key].opcode == "control_if" && blockList[key].nestingLevel == state.nestingList.length - 1) {
                 blockList[key].opcode = "control_if_else";
                 blockList[key].inputs.SUBSTACK2 = [2, (blockID + 1).toString()];
                 found = true;
                 break;
             }
         }
-        if (!found) compileError("could not find matching if block for else");
+        if (!found) {
+            compileError("could not find if");
+        }
         return;
     }
-
-    // Control structures: if, repeat, while
-    if (
-        line.startsWith("repeat") ||
-        line.startsWith("while") ||
-        line.startsWith("if (") ||
-        line.startsWith("if(")
-    ) {
-        let conditionStart = line.indexOf("(");
-        let conditionEnd = line.lastIndexOf(")");
-        if (conditionStart === -1 || conditionEnd === -1 || conditionEnd <= conditionStart) {
-            compileError("Invalid condition expression");
-        }
-        let conditionText = line.slice(conditionStart, conditionEnd + 1); // includes parentheses
-        let opcode = line.startsWith("repeat") ? "control_repeat"
-           : line.startsWith("while") ? "control_while"
-           : line.startsWith("if") ? "control_if"
-           : null;
-
-        if (!opcode) compileError("Unknown control structure");
-        
-        let inputName = opcode === "control_repeat" ? "TIMES" : "CONDITION";
-        
-        let id = (blockID + 1).toString();
-        blockID += 1;
-        
-        let cond = parseBlock(conditionText);
-        let block = {
-            opcode: opcode,
-            inputs: {
-                [inputName]: Array.isArray(cond)
-                    ? [3, (blockID + 1).toString()]
-                    : [1, [typeof cond === "number" ? 10 : 11, cond]],
-            },
-            fields: {},
-            next: null,
-            parent: blockID.toString(),
-            shadow: false,
-            topLevel: false,
-            nestingLevel: state.nestingList.length,
-        };
-        
-        blockList[id] = block;
-        
-        // Compile nested condition block (if needed)
-        if (Array.isArray(cond)) compileBlock(cond, blockID, state.nestingList.length);
-        
-        block.inputs.SUBSTACK = [2, (blockID + 1).toString()];
-        let nestingDepth = state.nestingList.length;
-        state.nestingList.push(parseInt(id));
-        while (state.nestingList.length > nestingDepth) {
-            compileStatement(state, codeLines);
-        }
-        blockList[id].next = (blockID + 1).toString();
+    if (line.startsWith("repeat") || line.startsWith("while") || line.startsWith("if (") || line.startsWith("if(")) {
+        let head = line.slice(0, line.lastIndexOf("{")).trim();
+        let repeatCountExpression = parseBlock(head);
+        let repeatID = blockID + 1;
+        compileBlock(repeatCountExpression, blockID, state.nestingList.length);
+        blockList[repeatID.toString()].inputs.SUBSTACK = [2, (blockID + 1).toString()];
         let nestingDepth = state.nestingList.length;
         state.nestingList.push(repeatID);
         while (state.nestingList.length > nestingDepth) {
             compileStatement(state, codeLines);
         }
         blockList[repeatID.toString()].next = (blockID + 1).toString();
-        return;
+    } else {
+        let id = blockID + 1;
+        compileBlock(parseBlock(line), blockID, state.nestingList.length);
+        blockList[id.toString()].next = (blockID + 1).toString();
     }
-
-    // Regular statement
-    let id = blockID + 1;
-    compileBlock(parseBlock(line), blockID, state.nestingList.length);
-    blockList[id.toString()].next = (blockID + 1).toString();
 }
 
 function clearVariablesAndLists(keepGlobal) {
