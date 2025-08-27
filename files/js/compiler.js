@@ -1,5 +1,7 @@
-let spriteBeingCompiled;
+// -------- Initialization (avoid TDZ) --------
+let spriteBeingCompiled = null;
 
+// -------- Helpers --------
 function handleSpecial(lines) {
     // Replaces forever loops with repeat infinity for now
     let code = [];
@@ -14,32 +16,21 @@ function handleSpecial(lines) {
 }
 
 function getParamsArray(params) {
-    // Parses a function string and results the params
+    // Parses a function string and returns the params
     let str = params.slice(1, params.length - 1);
-    if (str == "") {
-        return [];
-    }
-    if (str.trim().endsWith(",")) {
-        compileError("Unexpected ','");
-    }
+    if (str == "") return [];
+    if (str.trim().endsWith(",")) compileError("Unexpected ','");
     let parenLevel = 0;
     let output = [];
     let start = 0;
     let inString = false;
-    // console.log(str);
     let i = 0;
     for (char of str) {
         if (!inString) {
-            if (char == "(") {
-                parenLevel += 1;
-            }
-            if (char == ")") {
-                parenLevel -= 1;
-            }
+            if (char == "(") parenLevel += 1;
+            if (char == ")") parenLevel -= 1;
         }
-        if (char == '"') {
-            inString = !inString;
-        }
+        if (char == '"') inString = !inString;
         if (parenLevel == 0 && char == "," && !inString) {
             output.push(str.slice(start, i).trim());
             start = i + 1;
@@ -47,47 +38,42 @@ function getParamsArray(params) {
         i += 1;
     }
     output.push(str.slice(start, i).trim());
-
-    // console.log(output);
     return output; // Returns a list
 }
 
 function parseBlock(str) {
     // Parse block recursively making a nested list of lists
-    // Returns a list of terms
-    // A term is either a literal value or a function name
-    // A term is an Object
+    // Returns a list of terms: either a literal, a variable/list/arg pointer, or ["funcName", ...args]
     str = str.trim();
-    if (str.startsWith('"')) {
-        // String
+
+    // String
+    if (str.startsWith('"') && str.endsWith('"')) {
         return str.slice(1, str.length - 1);
     }
+    // Number
     if (!isNaN(parseFloat(str))) {
         return parseFloat(str);
     }
-    if (str == "true" || str == "false") {
+    // Boolean literal
+    if (str === "true" || str === "false") {
         return str;
     }
-    if (str.startsWith("$")) {
-        return variableStartThing + str;
-    }
-    if (str.startsWith("#")) {
-        return listStartThing + str;
-    }
+    // Special markers
+    if (str.startsWith("$")) return variableStartThing + str;
+    if (str.startsWith("#")) return listStartThing + str;
+
+    // Procedure argument reference (inside custom block)
     if (procArgStack && procArgStack.length && procArgStack[procArgStack.length - 1][str]) {
         return argStartThing + str;
     }
-    if (!str.includes("(")) {
-        compileError("Missing '('");
-    }
-    if (!str.includes(")")) {
-        compileError("Missing ')'");
-    }
+
+    // Function call
+    if (!str.includes("(")) compileError("Missing '('");
+    if (!str.includes(")")) compileError("Missing ')'");
     let functionName = str.slice(0, str.indexOf("(")).trim();
     let paramsString = str.slice(str.indexOf("("));
     let paramsStringsArray = getParamsArray(paramsString);
     let paramTermsArray = paramsStringsArray.map((s) => parseBlock(s));
-
     return [functionName].concat(paramTermsArray);
 }
 
@@ -128,15 +114,6 @@ function getBroadcasts() {
 }
 
 function getCostumes(sprite) {
-    let example = {
-        name: "costume1",
-        bitmapResolution: 1,
-        dataFormat: "svg",
-        assetId: "bcf454acf82e4504149f7ffe07081dbc",
-        md5ext: "bcf454acf82e4504149f7ffe07081dbc.svg",
-        rotationCenterX: 48,
-        rotationCenterY: 50,
-    };
     let createdCostumeList = [];
     for (let costume of assets.sprites[sprite].costumeList) {
         let newCostume = {
@@ -154,15 +131,6 @@ function getCostumes(sprite) {
 }
 
 function getSounds(sprite) {
-    let example = {
-        name: "Meow",
-        assetId: "83c36d806dc92327b9e7049a565c6bff",
-        dataFormat: "wav",
-        format: "",
-        rate: 48000,
-        sampleCount: 40682,
-        md5ext: "83c36d806dc92327b9e7049a565c6bff.wav",
-    };
     let createdSoundList = [];
     for (let sound of assets.sprites[sprite].soundList) {
         let newSound = {
@@ -176,10 +144,13 @@ function getSounds(sprite) {
     return createdSoundList;
 }
 
+// -------- Errors (TDZ-safe) --------
 function compileError(err) {
-    throw { name: "CompileError", message: `CompileError on line ${lineNum} in sprite ${getSpriteName(spriteBeingCompiled, true)} — ${err}` };
+    const spriteLabel = spriteBeingCompiled != null ? getSpriteName(spriteBeingCompiled, true) : "(unknown)";
+    throw { name: "CompileError", message: `CompileError on line ${lineNum} in sprite ${spriteLabel} — ${err}` };
 }
 
+// -------- Constants --------
 const input1 = '"3"';
 const output1 = "3";
 const input2 = "3.14159";
@@ -192,6 +163,7 @@ const variableStartThing = "$`!jsf☠d_Why are you looking here_89ISf[$!☠$~$";
 const listStartThing = "#`!j☠sf_Why are you looking here?_d7S&pSf]]@$!☠#~#";
 const argStartThing = "@`!procArg☠DontLookHere_9fS$";
 
+// -------- Global compile state --------
 let blockID;
 let blockY;
 let firstBlockInScript;
@@ -206,37 +178,19 @@ let startedFirstScript;
 let procArgStack;
 let baseBlockData = JSON.parse(JSON.stringify(blockData));
 
+// -------- Block compilation --------
 function compileBlock(code, parent, nestingLevel) {
-    // console.log("linestr", lineString)
-    // if (lineString.startsWith("//") || lineString == "") {
-    //     return;
-    // }
     blockID += 1;
     let myID = blockID;
-    // let parsedCode = parse(lineString);
     let parsedCode = code;
-
     let block = {};
-
-    // if (parsedCode[0].startsWith("$")) {
-    //     console.log("variable get")
-    //     let varName = parsedCode[0].slice(1)
-    //     if (varName == "") {
-    //         compileError("Variable name is blank")
-    //     }
-    //     block = [12, varName, variables[varName].id]
-    // } else {
 
     let funcName = parsedCode.shift();
     let params = parsedCode;
     let meta = customBlocks && customBlocks[funcName];
 
-    if (!funcName) {
-        compileError("Function name is undefined");
-    }
-    if (!blockData[funcName] && !meta) {
-        compileError(`There is no function called '${funcName}'`);
-    }
+    if (!funcName) compileError("Function name is undefined");
+    if (!blockData[funcName] && !meta) compileError(`There is no function called '${funcName}'`);
 
     block.next = null;
     block.shadow = false;
@@ -265,57 +219,18 @@ function compileBlock(code, parent, nestingLevel) {
     }
 
     let typeInfo = blockData[funcName] || { type: "stack" };
-    if (typeInfo.type == "stack") {
-        blockY += 70;
-    }
+    if (typeInfo.type == "stack") blockY += 70;
 
-    // let doNormal = false;
-    // dropdownBlock: if (blockData[funcName].dropdown == "block") {
-    //     let dropBlockID = (blockID + 1).toString();
-    //     let dropBlock = {
-    //         parent: myID.toString(),
-    //         next: null,
-    //         inputs: {},
-    //         fields: {},
-    //         shadow: true,
-    //     };
-
-    //     for (let [i, param] of params.entries()) {
-    //         let item = blockData[funcName].dropdownOpcode[i];
-    //         if (item != null) {
-    //             console.log("dropblock", item, param);
-    //             if (typeof param == "object") {
-    //                 console.log("canceling...", param);
-    //                 block.inputs = {};
-    //                 doNormal = true;
-    //                 break dropdownBlock;
-    //             }
-    //             dropBlock.opcode = item;
-    //             dropBlock.fields[blockData[funcName].inputs[i]] = [param, null];
-    //             block.inputs[blockData[funcName].inputs[i]] = [1, dropBlockID];
-    //         } else {
-    //             block.inputs[blockData[funcName].inputs[i]] = [1, [10, param]];
-    //         }
-    //     }
-
-    //     console.log(dropBlock);
-    //     blockList[dropBlockID] = dropBlock;
-    //     blockID += 1;
-    // } else {
-    //     doNormal = true;
-    // }
     let doNormal = true;
 
     if (doNormal) {
         for (let [i, param] of params.entries()) {
             if (typeof param == "object") {
-                // Another block
-                block.inputs[blockData[funcName].inputs[i]] = [3, (blockID + 1).toString()]; // If the input is a block
-                // if (block.type != "boolean" && !funcName.startsWith("if")) {
-                //     block.inputs[blockData[funcName].inputs[i]][2] = [10, ""];
-                // }
-                compileBlock(param, myID);
+                // Nested block
+                block.inputs[blockData[funcName].inputs[i]] = [3, (blockID + 1).toString()];
+                compileBlock(param, myID, nestingLevel);
             } else {
+                // Dropdown-as-block support
                 dropBlockIf: if (blockData[funcName].dropdown == "block") {
                     let dropBlockID = (blockID + 1).toString();
                     let dropBlock = {
@@ -341,14 +256,11 @@ function compileBlock(code, parent, nestingLevel) {
                     }
                 }
 
+                // Square dropdowns into fields
                 if (blockData[funcName].dropdownInputs) {
-                    // block contains a square dropdown
                     if (blockData[funcName].dropdownInputs[i] != null) {
-                        // only replace input if it is a dropdown
-                        block.fields[blockData[funcName].inputs[i]] = [param, null]; // second param has to be null for some reason
+                        block.fields[blockData[funcName].inputs[i]] = [param, null];
 
-                        // variables
-                        // if (funcName == "setVar" || funcName == "changeVar") {
                         if (blockData[funcName].category) {
                             if (blockData[funcName].category == "variable") {
                                 let varID;
@@ -356,69 +268,51 @@ function compileBlock(code, parent, nestingLevel) {
                                     varID = variables[param].id;
                                 } else {
                                     varID = Math.round(Math.random() * 1e15).toString();
-                                    variables[param] = {};
-                                    variables[param].id = varID;
-                                    variables[param].value = 0;
-                                    if (spriteBeingCompiled == "stage") {
-                                        variables[param].global = true;
-                                    }
+                                    variables[param] = { id: varID, value: 0 };
+                                    if (spriteBeingCompiled == "stage") variables[param].global = true;
                                 }
                                 block.fields[blockData[funcName].inputs[i]][1] = varID;
                             }
-                            // }
-
-                            // lists
-                            // if (blockData[funcName].category) {
                             if (blockData[funcName].category == "list") {
                                 let listID;
                                 if (lists[param]) {
                                     listID = lists[param].id;
                                 } else {
                                     listID = Math.round(Math.random() * 1e15).toString();
-                                    lists[param] = {};
-                                    lists[param].id = listID;
-                                    lists[param].value = [];
-                                    if (spriteBeingCompiled == "stage") {
-                                        lists[param].global = true;
-                                    }
+                                    lists[param] = { id: listID, value: [] };
+                                    if (spriteBeingCompiled == "stage") lists[param].global = true;
                                 }
                                 block.fields[blockData[funcName].inputs[i]][1] = listID;
                             }
                         }
 
-                        // broadcast received block - only one with a dropdown
+                        // broadcast receiver (hat)
                         if (blockData[funcName].opcode == "event_whenbroadcastreceived") {
                             let brID;
                             if (broadcasts[param]) {
                                 brID = broadcasts[param].id;
                             } else {
                                 brID = Math.round(Math.random() * 1e15).toString();
-                                broadcasts[param] = {};
-                                broadcasts[param].id = brID;
+                                broadcasts[param] = { id: brID };
                             }
                             block.fields[blockData[funcName].inputs[i]][1] = brID;
                         }
-
                         continue;
                     }
                 }
+
+                // Variable reporter injection
                 if (param.toString().startsWith(variableStartThing)) {
-                    // variable
                     let varName = param.toString().slice(variableStartThing.length + 1);
-                    if (varName == "") {
-                        compileError("Variable name is blank");
-                    }
-                    if (!variables[varName]) {
-                        compileError(`There is no variable named '${varName}'`);
-                    }
+                    if (varName == "") compileError("Variable name is blank");
+                    if (!variables[varName]) compileError(`There is no variable named '${varName}'`);
                     block.inputs[blockData[funcName].inputs[i]] = [3, [12, varName, variables[varName].id]];
                 } else if (param.toString().startsWith(argStartThing)) {
+                    // Custom proc arg
                     let argName = param.toString().slice(argStartThing.length);
                     let ctx = procArgStack[procArgStack.length - 1];
                     let info = ctx && ctx[argName];
-                    if (!info) {
-                        compileError(`Unknown argument '${argName}'`);
-                    }
+                    if (!info) compileError(`Unknown argument '${argName}'`);
                     let argBlockId = (blockID + 1).toString();
                     block.inputs[blockData[funcName].inputs[i]] = [3, argBlockId];
                     blockList[argBlockId] = {
@@ -433,48 +327,46 @@ function compileBlock(code, parent, nestingLevel) {
                     };
                     blockID += 1;
                 } else {
+                    // List reporter or literal
                     if (param.toString().startsWith(listStartThing)) {
                         let listName = param.toString().slice(listStartThing.length + 1);
-                        if (listName == "") {
-                            compileError("List name is blank");
-                        }
-                        if (!lists[listName]) {
-                            compileError(`There is no list named '${listName}'`);
-                        }
+                        if (listName == "") compileError("List name is blank");
+                        if (!lists[listName]) compileError(`There is no list named '${listName}'`);
                         block.inputs[blockData[funcName].inputs[i]] = [3, [13, listName, lists[listName].id]];
                     } else {
+                        // Broadcast inputs
                         if (funcName.startsWith("broadcast")) {
                             let brID;
                             if (broadcasts[param]) {
                                 brID = broadcasts[param].id;
                             } else {
                                 brID = Math.round(Math.random() * 1e15).toString();
-                                broadcasts[param] = {};
-                                broadcasts[param].id = brID;
+                                broadcasts[param] = { id: brID };
                             }
                             block.inputs[blockData[funcName].inputs[i]] = [1, [11, param.toString(), brID]];
                         } else {
-                            block.inputs[blockData[funcName].inputs[i]] = [1, [10, param]]; // regular string or number
+                            // Regular string/number
+                            block.inputs[blockData[funcName].inputs[i]] = [1, [10, param]];
                         }
                     }
                 }
 
+                // Color input special-casing
                 if (funcName.toLowerCase().includes("color")) {
-                    // special case color inputs
                     if (param.toString().startsWith("#")) {
-                        block.inputs[blockData[funcName].inputs[i]][1][0] = 9; // type 9 is color
+                        block.inputs[blockData[funcName].inputs[i]][1][0] = 9;
                     }
                 }
             }
         }
+
         if (params && blockData[funcName].inputs) {
             let got = params.length;
             let want = blockData[funcName].inputs.length;
-            if (got != want) {
-                compileError(`Got ${got} input${got == 1 ? "" : "s"}, expected ${want} input${want == 1 ? "" : "s"}`);
-            }
+            if (got != want) compileError(`Got ${got} input${got == 1 ? "" : "s"}, expected ${want} input${want == 1 ? "" : "s"}`);
         }
     }
+
     if (meta) {
         block.mutation = {
             proccode: meta.proccode,
@@ -485,6 +377,7 @@ function compileBlock(code, parent, nestingLevel) {
     blockList[myID.toString()] = block;
 }
 
+// -------- Custom block parsing --------
 function parseCustomBlockHeader(s) {
     let parts = tokenizeHeaderKVs(s);
     let tokens = [];
@@ -506,16 +399,9 @@ function parseCustomBlockHeader(s) {
 
     let codePieces = [];
     tokens.forEach(t => {
-        if (t.kind === "label") {
-            let text = t.text.trim();
-            codePieces.push(text);
-        }
-        if (t.kind === "rep") {
-            codePieces.push("%s");
-        }
-        if (t.kind === "bool") {
-            codePieces.push("%b");
-        }
+        if (t.kind === "label") codePieces.push(t.text.trim());
+        if (t.kind === "rep") codePieces.push("%s");
+        if (t.kind === "bool") codePieces.push("%b");
     });
     let proccode = codePieces.join(" ").replace(/\s+/g, " ").trim();
     let callName = tokens[0].text.trim();
@@ -547,15 +433,8 @@ function tokenizeHeaderKVs(s) {
         let val = "", inEsc = false;
         for (; i < s.length; i++) {
             let c = s[i];
-            if (inEsc) {
-                val += c;
-                inEsc = false;
-                continue;
-            }
-            if (c === "\\") {
-                inEsc = true;
-                continue;
-            }
+            if (inEsc) { val += c; inEsc = false; continue; }
+            if (c === "\\") { inEsc = true; continue; }
             if (c === '"') break;
             val += c;
         }
@@ -616,23 +495,22 @@ const nestingType = {
     IFTHENELSE: "ifthenelse",
 };
 
+// -------- Statement compilation --------
 function compileStatement(state, codeLines) {
     let line = codeLines[state.currentLine++];
     lineNum = state.currentLine;
     line = line.trim();
-    if (line === "" || line.startsWith("//")) {
-        return;
-    }
+    if (line === "" || line.startsWith("//")) return;
+
+    // script start
     if (line === "script{" || line === "script {") {
-        if (startedFirstScript) {
-            blockY += 90;
-        } else {
-            startedFirstScript = true;
-        }
+        if (startedFirstScript) blockY += 90; else startedFirstScript = true;
         firstBlockInScript = true;
         state.inScript = true;
         return;
     }
+
+    // custom block definition start
     if (line.startsWith("block [") && (line.endsWith("{") || line.endsWith("{ "))) {
         let inside = line.slice(line.indexOf("[") + 1, line.lastIndexOf("]"));
         let meta = parseCustomBlockHeader(inside);
@@ -643,6 +521,8 @@ function compileStatement(state, codeLines) {
         procArgStack.push(meta.argMap);
         return;
     }
+
+    // scope close
     if (line == "}") {
         if (state.nestingList.length > 0) {
             let keys = Object.keys(blockList);
@@ -673,9 +553,13 @@ function compileStatement(state, codeLines) {
         }
         compileError("Unexpected '}'");
     }
+
+    // must be inside script or custom block body
     if (!state.inScript && state.nestingList.length === 0) {
-        compileError("Statement outside of script block");
+        compileError("Statement outside of script or custom block");
     }
+
+    // } else {
     if (line.replaceAll(" ", "") == "}else{") {
         let keys = Object.keys(blockList);
         for (let i = keys.length - 1; i >= 0; i--) {
@@ -695,14 +579,14 @@ function compileStatement(state, codeLines) {
                 break;
             }
         }
-        if (!found) {
-            compileError("could not find if");
-        }
+        if (!found) compileError("could not find if");
         return;
     }
+
+    // control heads: repeat(...){  while(...){  if(...){
     if (line.startsWith("repeat") || line.startsWith("while") || line.startsWith("if (") || line.startsWith("if(")) {
         let head = line.slice(0, line.lastIndexOf("{")).trim();
-        let repeatCountExpression = parseBlock(head);
+        let repeatCountExpression = parseBlock(head); // e.g. ["repeat", 10] or ["if", <cond>]
         let repeatID = blockID + 1;
         compileBlock(repeatCountExpression, blockID, state.nestingList.length);
         blockList[repeatID.toString()].inputs.SUBSTACK = [2, (blockID + 1).toString()];
@@ -712,24 +596,23 @@ function compileStatement(state, codeLines) {
             compileStatement(state, codeLines);
         }
         blockList[repeatID.toString()].next = (blockID + 1).toString();
-    } else {
-        let id = blockID + 1;
-        compileBlock(parseBlock(line), blockID, state.nestingList.length);
-        blockList[id.toString()].next = (blockID + 1).toString();
+        return;
     }
+
+    // regular statement
+    let id = blockID + 1;
+    compileBlock(parseBlock(line), blockID, state.nestingList.length);
+    blockList[id.toString()].next = (blockID + 1).toString();
 }
 
+// -------- Vars/lists clear --------
 function clearVariablesAndLists(keepGlobal) {
     if (keepGlobal) {
         for (key of Object.keys(variables)) {
-            if (!variables[key].global) {
-                delete variables[key];
-            }
+            if (!variables[key].global) delete variables[key];
         }
         for (key of Object.keys(lists)) {
-            if (!lists[key].global) {
-                delete lists[key];
-            }
+            if (!lists[key].global) delete lists[key];
         }
     } else {
         variables = {};
@@ -737,11 +620,12 @@ function clearVariablesAndLists(keepGlobal) {
     }
 }
 
+// -------- Sprite compilation --------
 function compileSprite(sprite) {
     spriteBeingCompiled = sprite;
 
     let codeLines = codeList[sprite].replaceAll("\r", "").split("\n");
-    codeLines = handleSpecial(codeLines); // Handles forever loops
+    codeLines = handleSpecial(codeLines); // forever -> repeat Infinity
     let currentLine = 0;
     blockY = 0;
     firstBlockInScript = true;
@@ -758,6 +642,7 @@ function compileSprite(sprite) {
         compileStatement(state, codeLines);
     }
     blockID += 2;
+
     let newSprite = {
         isStage: false,
         name: sprite == "stage" ? "Stage" : Base64.decode(sprite),
@@ -768,19 +653,8 @@ function compileSprite(sprite) {
         currentCostume: 0,
         broadcasts: {},
         costumes: getCostumes(sprite),
-        sounds: getSounds(sprite) /*[
-            {
-            "name": "Meow",
-            "assetId": "83c36d806dc92327b9e7049a565c6bff",
-            "dataFormat": "wav",
-            "format": "",
-            "rate": 48000,
-            "sampleCount": 40682,
-            "md5ext": "83c36d806dc92327b9e7049a565c6bff.wav"
-            }
-        ],*/,
+        sounds: getSounds(sprite),
         volume: 100,
-        // "layerOrder": 2,
         visible: true,
         x: 0,
         y: 0,
@@ -791,25 +665,24 @@ function compileSprite(sprite) {
     };
 
     if (sprite == "stage") {
-        // newSprite.broadcasts = getBroadcasts()
-        (newSprite.tempo = 60), (newSprite.videoTransparency = 50), (newSprite.videoState = "on"), (newSprite.textToSpeechLanguage = null);
+        newSprite.tempo = 60;
+        newSprite.videoTransparency = 50;
+        newSprite.videoState = "on";
+        newSprite.textToSpeechLanguage = null;
         newSprite.isStage = true;
-        // newSprite.layerOrder = 0;
-        // delete newSprite.layerOrder
         delete newSprite.x;
         delete newSprite.y;
     }
     return newSprite;
 }
 
-
+// -------- Whole-project compile --------
 async function compile() {
     let compiled;
     try {
-        // let codeLines = document.querySelector("#editor").value.replaceAll("\r", "").split("\n");
-        // let codeLines = codemirror.state.doc.toString().replaceAll("\r", "").split("\n");
-        // codeLines = handleSpecial(codeLines); // Handles forever loops
-        // let currentLine = 0;
+        // neutral: we're not on any sprite yet
+        spriteBeingCompiled = null;
+
         blockID = 0;
         broadcasts = {};
         clearVariablesAndLists();
@@ -818,9 +691,6 @@ async function compile() {
         startedFirstScript = false;
         procArgStack = [];
 
-        // while (state.currentLine < codeLines.length) {
-        //     compileStatement(state, codeLines);
-        // }
         compiled = {
             targets: [],
             monitors: [],
@@ -829,163 +699,47 @@ async function compile() {
                 semver: "3.0.0",
                 vm: "0.2.0",
                 agent: "",
-                platform: {
-                    name: "TurboWarp",
-                    url: "https://turbowarp.org/",
-                },
+                platform: { name: "TurboWarp", url: "https://turbowarp.org/" },
             },
         };
-        spriteBeingCompiled = null;
+
         for (let sprite of spriteList) {
+            spriteBeingCompiled = sprite; // set early to avoid TDZ in errors
             compiled.targets.push(compileSprite(sprite));
         }
         compiled.targets[0].broadcasts = getBroadcasts();
     } catch (e) {
-        if (!e.message.startsWith("CompileError")) {
-            alert("An unexpected error was encountered while compiling — " + e.message);
+        if (!e.message || !e.message.startsWith || !e.message.startsWith("CompileError")) {
+            alert("An unexpected error was encountered while compiling — " + (e && e.message ? e.message : e));
         } else {
             alert(e.message);
             console.error(e);
         }
         return null;
     }
-    // for (let line of codeLines) {
-    //     line = line.trim()
-    //     if (line.startsWith("//") || line == "") {
-    //         continue
-    //     }
-    //     let id = blockID + 1; // The ID of the next block to be compiled
-    //     compileBlock(parseBlock(line), blockID); // Changes block ID by however many blocks were compiled
-    //     blockList[id.toString()].next = (blockID + 1).toString();
-    // }
-    // console.log(blockList);
-    // console.log(variables);
 
-    // let json = `{
-    //     "targets": [
-    //         {
-    //         "isStage": true,
-    //         "name": "Stage",
-    //         "variables": {},
-    //         "lists": {},
-    //         "broadcasts": ${JSON.stringify(getBroadcasts(), null, 4)},
-    //         "blocks": {},
-    //         "comments": {},
-    //         "currentCostume": 0,
-    //         "costumes": [
-    //             {
-    //             "name": "backdrop1",
-    //             "dataFormat": "svg",
-    //             "assetId": "cd21514d0531fdffb22204e0ec5ed84a",
-    //             "md5ext": "cd21514d0531fdffb22204e0ec5ed84a.svg",
-    //             "rotationCenterX": 240,
-    //             "rotationCenterY": 180
-    //             }
-    //         ],
-    //         "sounds": [],
-    //         "volume": 100,
-    //         "layerOrder": 0,
-    //         "tempo": 60,
-    //         "videoTransparency": 50,
-    //         "videoState": "on",
-    //         "textToSpeechLanguage": null
-    //         },
-    //         {
-    //         "isStage": false,
-    //         "name": "Sprite1",
-    //         "variables": ${JSON.stringify(getVariables(), null, 4)},
-    //         "lists": ${JSON.stringify(getLists(), null, 4)},
-    //         "broadcasts": {},
-    //         "blocks": ${JSON.stringify(blockList, null, 4)},
-    //         "comments": {},
-    //         "currentCostume": 0,
-    //         "costumes": ${JSON.stringify(getCostumes(), null, 4)},
-    //         "sounds": [
-    //             {
-    //             "name": "Meow",
-    //             "assetId": "83c36d806dc92327b9e7049a565c6bff",
-    //             "dataFormat": "wav",
-    //             "format": "",
-    //             "rate": 48000,
-    //             "sampleCount": 40682,
-    //             "md5ext": "83c36d806dc92327b9e7049a565c6bff.wav"
-    //             }
-    //         ],
-    //         "volume": 100,
-    //         "layerOrder": 2,
-    //         "visible": true,
-    //         "x": 0,
-    //         "y": 0,
-    //         "size": 100,
-    //         "direction": 90,
-    //         "draggable": false,
-    //         "rotationStyle": "all around"
-    //         }
-    //     ],
-    //     "monitors": [],
-    //     "extensions": [],
-    //     "meta": {
-    //         "semver": "3.0.0",
-    //         "vm": "0.2.0",
-    //         "agent": "",
-    //         "platform": {
-    //             "name": "TurboWarp",
-    //             "url": "https://turbowarp.org/"
-    //         }
-    //     }
-    // }`;
-    // console.log(json)
     let zip = new JSZip();
     zip.file("project.json", JSON.stringify(compiled, null, 4));
     for (let assetID of Object.keys(assets.list)) {
-        if (isAssetUsed(assetID)) {
-            zip.file(assetID, assets.list[assetID]);
-        }
+        if (isAssetUsed(assetID)) zip.file(assetID, assets.list[assetID]);
     }
     let blob = await zip.generateAsync({
         type: "blob",
         compression: "DEFLATE",
-        compressionOptions: {
-            level: 9,
-        },
+        compressionOptions: { level: 9 },
     });
 
     console.time("arraybuffer");
     let a = await blob.arrayBuffer();
     console.timeEnd("arraybuffer");
-    // a = blob
     window.output10 = a;
     return a;
-    // saveAs(blob, "hello.zip");
-    // return json;
 }
 
+// -------- Runner --------
 async function run() {
     saveCurrentSpriteCode();
     let project = await compile();
-    // let r = await fetch("https://tmpfiles.org/api/v1/upload", {
-    //     method: "POST",
-    //     body: JSON.stringify({file: "test"})
-    // })
-    // document.getElementById("preview").src = "";
-
-    // const form = new FormData();
-    // form.append("file", new File([project], "CoolTestProject.sb3"));
-
-    // let r = await fetch("https://tmpfiles.org/api/v1/upload", {
-    //     method: "POST",
-    //     body: form,
-    // });
-
-    // let response = await r.json();
-    // if (response.data.url) {
-    //     let u = new URL(response.data.url);
-    //     let url = u.origin + "/dl" + u.pathname;
-    //     console.log(url);
-    //     document.getElementById("preview").src = `https://turbowarp.org/embed?project_url=${encodeURIComponent(`https://corsproxy.josueart40.workers.dev/?${url}`)}&autoplay&settings-button&addons=pause,remove-curved-stage-border,clones`;
-    // } else {
-    //     console.log(response);
-    // }
     document.getElementById("preview").hidden = false;
     document.getElementById("sprite-container").style.marginTop = "0px";
     if (project) {
