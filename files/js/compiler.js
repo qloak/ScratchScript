@@ -1,3 +1,5 @@
+let spriteBeingCompiled;
+
 function handleSpecial(lines) {
     // Replaces forever loops with repeat infinity for now
     let code = [];
@@ -203,7 +205,6 @@ let nextParentOverride;
 let startedFirstScript;
 let procArgStack;
 let baseBlockData = JSON.parse(JSON.stringify(blockData));
-let spriteBeingCompiled;
 
 function compileBlock(code, parent, nestingLevel) {
     // console.log("linestr", lineString)
