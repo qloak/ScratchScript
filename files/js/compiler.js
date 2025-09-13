@@ -145,7 +145,7 @@ function getParamsArray(params) {
             }
         }
         if (char == '"') {
-@@ -559,52 +668,53 @@ function compileStatement(state, codeLines) {
+function compileStatement(state, codeLines) {
         compileBlock(parseBlock(line), blockID, state.nestingList.length); // Changes block ID by however many blocks were compiled
         blockList[id.toString()].next = (blockID + 1).toString();
     }
