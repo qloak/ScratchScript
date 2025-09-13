@@ -1,100 +1,266 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ScratchScript Documention</title>
-    <link rel="stylesheet" href="../files/css/docs.css">
-    <script src="../files/js/ScratchBlocks/scratchblocks-v3.6.4-min.js"></script>
-</head>
-<body>
-    <h2>Syntax Guide</h2>
-    <ul>
-        <li><a href="#basic-syntax">Basic syntax</a></li>
-        <li><a href="#scripts">Scripts</a></li>
-        <li><a href="#control-flow">Control flow</a></li>
-        <li><a href="#variables-and-lists">Variables and Lists</a></li>
-        <li><a href="#sprites">Sprites</a></li>
-        <br>
-        <li><a href="list.html">Full Block List and Reference</a></li>  
-        <br>
-        <li><a href="../index.html">Go Home</a></li>      
-    </ul>
-    <h3 id="basic-syntax">Basic syntax</h3>
-    <ul>
-        <li>ScratchScript's syntax is pretty similar to JavaScript syntax. If you know javascript syntax, you'll probably be able to catch on pretty quickly. Note that ScratchScript doesn't have the same keywords that JavaScript does. There are no <code>break</code>, <code>let</code>, <code>await</code> etc.</li>
-        <li>Indentation is optional</li>
-        <li>Functions always use parentheses</li>
-        <li>You can have a space after the function name before the parentheses</li>
-        <li>Strings are always surrounded by double quotes <code>"</code></li>
-        <li>Numbers do not need to be surrounded by quotes</li>
-        <li>Everything is a function and needs parentheses, including blocks like <code>xPos()</code> or <code>size()</code></li>
-        <li>The exception to the rule above are <a href="#variables-and-lists">variables and lists</a></li>
-        <li>There isn't much error handling, so don't mess stuff up</li>
-        <li>Note: Just because a project runs in the editor preview doesn't mean it will load into Scratch if you're using invalid syntax in your code.</li>
-        <li>Note: To have the preview have updated code, you must recompile with the big green button. Just pressing the green flag doesn't recompile.</li>
-        <li>To do comments, put <code>//</code> at the begining of the line</li>
-        <br>
-        <span>Example script:</span>
-<pre><code>whenGreenFlagClicked()
-setVar("correct?", 0)
-repeatUntil (=($correct?, 1)) {
-    ask("What is 1 + 1?")
-    if (=(answer(), 2)) {
-        sayForSecs("You got it right!", 2)
-        setVar("correct?", 1)
-    } else {
-        sayForSecs("You got it wrong...", 2)
-    }
-}
-moveSteps(10)
-</code></pre>
-    </ul>
-    <h3 id="scripts">Scripts</h3>
-    <ul>
-        <p>Scripts are sections of code begining with a hat block. For example, the <code>whenGreenFlagClicked()</code> block is a hat block.</p>
-        <p>To seperate scripts, use a blank line. For example: </p>
-<pre><code>whenGreenFlagClicked()
-moveSteps(10)
-
-whenKeyPressed("space")
-sayForSecs("You pressed space!", 2)
-</code></pre>
-    </ul>
-    <h3 id="control-flow">Control Flow</h3>
-    <ul>
-        For the blocks <code>repeat</code>, <code>repeatUntil</code>, <code>while</code>, <code>if</code>, and <code>forever</code> use curly braces <code>{}</code>
-        <p>For example, to make a loop that repeats until the mouse is down, you would do:</p>
-        
-<pre><code>repeatUntil (mouseDown()) {
-    [more stuff here]
-}</code></pre>
-        <p>To do an else for an if, just add <code>} else {</code></p>
-<pre><code>if (condition) {
-    [code]
-} else {
-    [more code]
-}</code></pre>
-    </ul>
-    <h3 id="variables-and-lists">Variables and Lists</h3>
-    <ul>
-        <p>Variables and lists are created as you use them.</p>
-        <p>For example, to create and set a variable to the users input, you would do:</p>
-<pre><code>ask("what")
-setVar("mycoolvar", answer())
-</code></pre>
-        <p>For a list, creating and adding a item to a list would be:</p>
-<pre><code>addToList("myitem", "mycoolist")</code></pre>
-        <p>The same applies for the other list and variable functions</p>
-        <p>To reference a variable or list, you would do <code>$varname</code> for variables or <code>#listname</code> for lists</p>
-        <p>Note: "reference" in this case means when reading out the value to use in another block. For blocks that change/edit the value, use a string quoted name as an argument</p>
-    </ul>
-    <h3 id="sprites">Sprites</h3>
-    <ul>
-        <p>You can add sprites by clicking the "New Sprite" button</p>
-    </ul>
-    <br>
-    <p>I think that's it</p>
-    <!-- <p style="height: 1000px;"></p> -->
-</body>
-</html>
+ <!DOCTYPE html>
+ <html lang="en">
+ <head>
+     <meta charset="UTF-8">
+     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+-    <title>ScratchScript Documention</title>
++    <title>ScratchScript v2.0 Documentation</title>
+     <link rel="stylesheet" href="../files/css/docs.css">
+     <script src="../files/js/ScratchBlocks/scratchblocks-v3.6.4-min.js"></script>
+ </head>
+ <body>
+-    <h2>Syntax Guide</h2>
+-    <ul>
+-        <li><a href="#basic-syntax">Basic syntax</a></li>
+-        <li><a href="#scripts">Scripts</a></li>
+-        <li><a href="#control-flow">Control flow</a></li>
+-        <li><a href="#variables-and-lists">Variables and Lists</a></li>
+-        <li><a href="#sprites">Sprites</a></li>
+-        <br>
+-        <li><a href="list.html">Full Block List and Reference</a></li>  
+-        <br>
+-        <li><a href="../index.html">Go Home</a></li>      
+-    </ul>
+-    <h3 id="basic-syntax">Basic syntax</h3>
+-    <ul>
+-        <li>ScratchScript's syntax is pretty similar to JavaScript syntax. If you know javascript syntax, you'll probably be able to catch on pretty quickly. Note that ScratchScript doesn't have the same keywords that JavaScript does. There are no <code>break</code>, <code>let</code>, <code>await</code> etc.</li>
+-        <li>Indentation is optional</li>
+-        <li>Functions always use parentheses</li>
+-        <li>You can have a space after the function name before the parentheses</li>
+-        <li>Strings are always surrounded by double quotes <code>"</code></li>
+-        <li>Numbers do not need to be surrounded by quotes</li>
+-        <li>Everything is a function and needs parentheses, including blocks like <code>xPos()</code> or <code>size()</code></li>
+-        <li>The exception to the rule above are <a href="#variables-and-lists">variables and lists</a></li>
+-        <li>There isn't much error handling, so don't mess stuff up</li>
+-        <li>Note: Just because a project runs in the editor preview doesn't mean it will load into Scratch if you're using invalid syntax in your code.</li>
+-        <li>Note: To have the preview have updated code, you must recompile with the big green button. Just pressing the green flag doesn't recompile.</li>
+-        <li>To do comments, put <code>//</code> at the begining of the line</li>
+-        <br>
+-        <span>Example script:</span>
+-<pre><code>whenGreenFlagClicked()
+-setVar("correct?", 0)
+-repeatUntil (=($correct?, 1)) {
+-    ask("What is 1 + 1?")
+-    if (=(answer(), 2)) {
+-        sayForSecs("You got it right!", 2)
+-        setVar("correct?", 1)
+-    } else {
+-        sayForSecs("You got it wrong...", 2)
+-    }
+-}
+-moveSteps(10)
+-</code></pre>
+-    </ul>
+-    <h3 id="scripts">Scripts</h3>
+-    <ul>
+-        <p>Scripts are sections of code begining with a hat block. For example, the <code>whenGreenFlagClicked()</code> block is a hat block.</p>
+-        <p>To seperate scripts, use a blank line. For example: </p>
+-<pre><code>whenGreenFlagClicked()
+-moveSteps(10)
+-
+-whenKeyPressed("space")
+-sayForSecs("You pressed space!", 2)
+-</code></pre>
+-    </ul>
+-    <h3 id="control-flow">Control Flow</h3>
+-    <ul>
+-        For the blocks <code>repeat</code>, <code>repeatUntil</code>, <code>while</code>, <code>if</code>, and <code>forever</code> use curly braces <code>{}</code>
+-        <p>For example, to make a loop that repeats until the mouse is down, you would do:</p>
+-        
+-<pre><code>repeatUntil (mouseDown()) {
+-    [more stuff here]
+-}</code></pre>
+-        <p>To do an else for an if, just add <code>} else {</code></p>
+-<pre><code>if (condition) {
+-    [code]
+-} else {
+-    [more code]
+-}</code></pre>
+-    </ul>
+-    <h3 id="variables-and-lists">Variables and Lists</h3>
+-    <ul>
+-        <p>Variables and lists are created as you use them.</p>
+-        <p>For example, to create and set a variable to the users input, you would do:</p>
+-<pre><code>ask("what")
+-setVar("mycoolvar", answer())
+-</code></pre>
+-        <p>For a list, creating and adding a item to a list would be:</p>
+-<pre><code>addToList("myitem", "mycoolist")</code></pre>
+-        <p>The same applies for the other list and variable functions</p>
+-        <p>To reference a variable or list, you would do <code>$varname</code> for variables or <code>#listname</code> for lists</p>
+-        <p>Note: "reference" in this case means when reading out the value to use in another block. For blocks that change/edit the value, use a string quoted name as an argument</p>
+-    </ul>
+-    <h3 id="sprites">Sprites</h3>
++    <h2>ScratchScript v2.0 Language Guide</h2>
++
++    <h3>Overview</h3>
++    <p>ScratchScript v2.0 replaces the function-heavy syntax of v1.0 with a more
++    natural, Scratch-like style:</p>
+     <ul>
+-        <p>You can add sprites by clicking the "New Sprite" button</p>
++        <li>Control flow uses keyword blocks such as <code>if ... end</code> and
++            <code>repeat until ... end</code>.</li>
++        <li>Assignments use <code>=</code> (<code>x = 5</code>).</li>
++        <li>Operators are infix (<code>x == y</code>).</li>
++        <li>Events use <code>when ... end</code> blocks.</li>
++        <li>Loose blocks run sequentially at startup.</li>
++        <li>Lists use <code>[]</code> indexing and keywords like
++            <code>add</code>/<code>remove</code>.</li>
+     </ul>
+-    <br>
+-    <p>I think that's it</p>
+-    <!-- <p style="height: 1000px;"></p> -->
++
++    <h3>Execution Model</h3>
++    <ol>
++        <li><strong>Scripts (<code>when … end</code>)</strong> work like Scratch
++        events and run in parallel when triggered.</li>
++        <li><strong>Loose blocks</strong> are statements outside any <code>when</code>
++        and are executed once at startup.</li>
++        <li><strong>Variables and lists</strong> are created automatically when first
++        assigned.</li>
++    </ol>
++
++    <h3>Syntax Rules</h3>
++
++    <h4>Comments</h4>
++<pre><code># This is a comment
++// This also works</code></pre>
++
++    <h4>Events</h4>
++<pre><code>when greenFlag
++    move 10 steps
++end
++
++when key "space" pressed
++    say "Space!"
++end
++
++when sprite "Cat" clicked
++    say "You clicked me!"
++end</code></pre>
++
++    <h4>Variables</h4>
++<pre><code>score = 0
++name = "Player"</code></pre>
++
++    <h4>Lists</h4>
++<pre><code>inventory = []
++add "sword" to inventory
++say inventory[0]
++remove "sword" from inventory</code></pre>
++
++    <h4>Control Flow</h4>
++<pre><code>if score == 0
++    say "No points yet"
++else
++    say "Good job!"
++end
++
++repeat until mouseDown
++    say "Waiting..."
++end
++
++forever
++    move 10 steps
++end</code></pre>
++
++    <h4>Actions</h4>
++<pre><code>move 10 steps
++turn 15 degrees
++go to x: 0 y: 0
++say "Hello" for 2
++ask "What is your name?"</code></pre>
++
++    <h4>Operators</h4>
++    <p>Arithmetic: <code>+</code>, <code>-</code>, <code>*</code>, <code>/</code>, <code>%</code><br>
++       Comparison: <code>==</code>, <code>!=</code>, <code>&lt;</code>, <code>&gt;</code>, <code>&lt;=</code>, <code>&gt;=</code><br>
++       Logic: <code>and</code>, <code>or</code>, <code>not</code></p>
++
++    <h3>Formal Grammar (EBNF)</h3>
++<pre><code>Program         ::= { Script | LooseStmt }
++
++Script          ::= "when" Event StmtBlock "end"
++
++LooseStmt       ::= Stmt
++
++Event           ::= "greenFlag"
++                  | "flag"
++                  | "key" String ["pressed"]
++                  | "sprite" String "clicked"
++
++StmtBlock       ::= { Stmt }
++
++Stmt            ::= Assignment
++                  | Action
++                  | Control
++                  | Comment
++
++Assignment      ::= Identifier "=" Expr
++
++Action          ::= "move" Expr "steps"
++                  | "turn" Expr "degrees"
++                  | "go" "to" "x:" Expr "y:" Expr
++                  | "say" String ["for" Expr]
++                  | "ask" String
++                  | "add" Expr "to" Identifier
++                  | "remove" Expr "from" Identifier
++                  | "change" Identifier "by" Expr
++
++Control         ::= "if" Expr StmtBlock ["else" StmtBlock] "end"
++                  | "while" Expr StmtBlock "end"
++                  | "repeat" ["until"] Expr StmtBlock "end"
++                  | "forever" StmtBlock "end"
++
++Expr            ::= Expr BinaryOp Expr
++                  | UnaryOp Expr
++                  | Identifier
++                  | Number
++                  | String
++                  | ListAccess
++                  | "(" Expr ")"
++
++ListAccess      ::= Identifier "[" Expr "]"
++
++BinaryOp        ::= "==" | "!=" | "<" | ">" | "<=" | ">="
++                  | "+" | "-" | "*" | "/" | "%"
++                  | "and" | "or"
++
++UnaryOp         ::= "not" | "-"
++
++Identifier      ::= Letter { Letter | Digit | "_" }
++Number          ::= Digit { Digit }
++String          ::= '"' { ANY - '"' } '"'
++
++Comment         ::= "#" { ANY - LineBreak }
++                  | "//" { ANY - LineBreak }
++
++Letter          ::= "A"…"Z" | "a"…"z"
++Digit           ::= "0"…"9"
++LineBreak       ::= "\n" | "\r" | "\r\n"</code></pre>
++
++    <h3>Example Program</h3>
++<pre><code># Loose block, runs at startup
++say "Program started"
++
++when greenFlag
++    score = 0
++    repeat until score == 3
++        ask "What is 2 + 2?"
++        if answer == "4"
++            say "Correct!" for 2
++            score = score + 1
++        else
++            say "Wrong!" for 2
++        end
++    end
++    say "You win!"
++end
++
++when key "space" pressed
++    move 10 steps
++end</code></pre>
++
++    <p><a href="../index.html">Go Home</a></p>
+ </body>
+ </html>
